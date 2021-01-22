@@ -1,6 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 import time
 
 
@@ -25,13 +28,16 @@ def seleniumScrapeTopics(startURL):
         print("On page " + str(currentPageNum))
         currentPageNum += 1
         driver.find_element_by_xpath("/html/body/div[4]/main/div[2]/div[2]/div/div[1]/form/button").click();
-        time.sleep(2)
+        time.sleep(3)
+                #if loading new page, uncomment
+        #element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[4]/main/div[2]/div[2]/div/div[1]/form/button")))
+        #element.click();
 
     html = driver.page_source.encode('utf-8')
 
 
     domStruct = BeautifulSoup(html, 'html.parser')
-
+    print("Parsing DOM Structure")
     allRepos = domStruct.select('article.border.rounded-1.box-shadow.bg-gray-light.my-4 div.d-flex.flex-items-start.ml-3 a')
     endStr = ""
     for eachRepo in allRepos:
