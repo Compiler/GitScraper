@@ -5,6 +5,8 @@
 - Run 'pip3 install requirements.txt'
 - Then run 'make'
 
+- You may have to download the correct version of the chromedriver from : https://chromedriver.chromium.org/downloads
+- Copy paste that download to overwrite the one in the repo
 
 
 ### Additional Options 
