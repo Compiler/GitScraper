@@ -2,7 +2,8 @@
 
 ## How to use
 
-- Just run make
+- Run 'pip3 install requirements.txt'
+- Then run 'make'
 
 
 
