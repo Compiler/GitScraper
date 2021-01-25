@@ -5,7 +5,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import time
-
+from datetime import date
 
 
 
@@ -14,7 +14,7 @@ PAGE_COUNT = 30
 GIT_URL_START = "https://github.com/trending/" + LANG + "?since=daily&spoken_language_code=en"
 GIT_URL_TOPICS= "https://github.com/topics/" + LANG + "?l=" + LANG
 
-
+#This will take a url to a topic page and parse the hyper linked projects
 def seleniumScrapeTopics(startURL):
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
@@ -46,12 +46,12 @@ def seleniumScrapeTopics(startURL):
             continue
         endStr += 'github.com'+str(eachRepo.attrs['href'])[0:-10] + '\n'
     
-    f = open("HTMLDump.txt", "a", encoding='utf-8')
+    f = open("ScrapedProjects/SJP-"+str(date.today())+".txt", "a", encoding='utf-8')
     f.write(endStr)
     f.close() 
 
 
-
+#This will take a url to the trending page and parse the hyper linked projects
 def getTrendingRepositoriesLinks(startURL):
     res = requests.get(startURL, headers= {'User-Agent' : "Mozilla/5.0"})
     if(res.status_code != 200):
