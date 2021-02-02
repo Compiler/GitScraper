@@ -11,5 +11,5 @@ def parse(filename, outputFilename, shouldKeepComments):
         else:
             fw.write('/*\n'+code['nl'] + '\n*/\n' + code['code'])
 if __name__ == "__main__":
-    parse('resources//example.json', 'resources//example_output_Comments', 1)
-    parse('resources//example.json', 'resources//example_output_NoComments', 0)
+    parse('resources//example.json', 'resources//traintextcomments', 1)
+    #parse('resources//train.json', 'resources//traintext', 0)
