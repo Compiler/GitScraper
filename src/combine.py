@@ -2,6 +2,7 @@ from datetime import date
 from os import listdir
 from os.path import isfile, join
 
+#this file will concatenate all links inside all files of scrapedprojects and remove duplicates.
 
 if __name__ == "__main__":
     #f = open("ScrapedProjects/SJP-"+str(date.today())+".txt", "a", encoding='utf-8')

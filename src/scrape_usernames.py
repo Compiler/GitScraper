@@ -8,8 +8,9 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 from datetime import date
 import os
-
+import re
 #alternative solution : do not delete
+
 #import requests
 #from requests.adapters import HTTPAdapter
 #from requests.packages.urllib3.util.retry import Retry
@@ -29,23 +30,40 @@ def validateUser(startURL):
         if(res.status_code != 200):
             print ("Failed to load '" + startURL + "' -- response code : " + str(res.status_code))
             if(res.status_code == 429):
-                print("Sleeping")
-                time.sleep(10)
-                print("re-attempting")
+                print("Sleeping --", end='')
+                time.sleep(5)
+                print("Reattempting connection!")
                 return validateUser(startURL)
             return -1
         print(".", end='')
         return 1
-    except:
-        print("Exception caught: sleeping...")
-        time.sleep(15*60)
+    except requests.exceptions.ConnectionError:
+        print("Connection Exception caught: sleeping...")
+        time.sleep(5)
         return validateUser(startURL)
 
 
 if __name__ == '__main__':
-    f = open("ScrapedUsers/Github_Usernames_Scrape.txt", "w", encoding='utf-8')
+    filename = "ScrapedUsers/GithubUsernames.txt"
+    startKey = ''
+    if(os.stat(filename).st_size != 0):
+        with open(filename, 'r') as f:
+            line = f.readlines()[-1]
+        
+        startKey = re.findall("/[A-Z0-9_]*$", line)[0][1:]
+        print("Resuming from",startKey)
+    f = open(filename, "a", encoding='utf-8')
+    flag = True
+    if(startKey == ''):
+        flag = False
     for i in range(5):
-        for username in map(''.join, itertools.product('ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_', repeat=i+2)):
+        for username in map(''.join, itertools.product('ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_', repeat=i)):
+            if(flag):
+                if(username == startKey):
+                    flag = False
+                print(username,'skipped')
+                continue
+            
             if(validateUser(username) == 1):
                 f.write('https://github.com/' + username + '\n')
     f.close()
