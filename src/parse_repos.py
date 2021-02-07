@@ -42,7 +42,7 @@ def parseContent(htmlData):
         if(lang != None):
             print(lang.text.split()[0],'-',href)
             repos[lang.text.split()[0]] =  href
-            f.write(lang.text.split()[0]+'\t\t\t\t\t\t' + href+'\n')
+            f.write('\"'+lang.text.split()[0]+'\":\"' + href+'\"\n')
     print('done')
     
 
