@@ -1,9 +1,0 @@
-[{
-    "code": "public JToggleGroup createCheckboxGroup(){\n  return createToggleGroup(JToggleGroup.CHECKBOX);\n}\n",
-     "nl": "Creates a new group of check boxes for interacting with the query."
-},
-{"code": "public void addBodyDecl(BodyDecl node){\n  List<BodyDecl> list=(parent == null || state == null) ? getBodyDeclListNoTransform() : getBodyDeclList();\n  list.addChild(node);\n}\n", "nl": "Append an element to the BodyDecl list."},
-{"code": "public WildcardFilter(String[] wildcards){\n  if (wildcards == null) {\n    throw new IllegalArgumentException(\"The wildcard array must not be null\");\n  }\n  this.wildcards=new String[wildcards.length];\n  System.arraycopy(wildcards,0,this.wildcards,0,wildcards.length);\n}\n", "nl": "Construct a new case-sensitive wildcard filter for an array of wildcards."},
-{"code": "Object decompressObject(MarshObject objToDecompress) throws IOException, ClassNotFoundException {\n  CompressedMarshObjectConvertor cv=null;\n  Object obj=null;\n  try {\n    cv=_compressedConvertorPool.getResource();\n    obj=cv.getObject(objToDecompress);\n  }\n  finally {\n    if (cv != null)     _compressedConvertorPool.freeResource(cv);\n  }\n  return obj;\n}\n", "nl": "Decompress the desired object using GigaSpaces compression facility"},
-{"code": "protected boolean isInitialMethod(SootMethod sm){\n  for (  Unit u : this.initialSeeds.keySet())   if (interproceduralCFG().getMethodOf(u) == sm)   return true;\n  return false;\n}\n", "nl": "Gets whether the given method is an entry point, i.e. one of the initial seeds belongs to the given method"},
-{"code": "public int addFile(File file){\n  return getFileId(file);\n}\n", "nl": "add a file, if not already present"}]
