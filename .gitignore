@@ -4,4 +4,7 @@ ScrapedProjects/*
 Resources/example_output*
 Resources/train*
 Resources/test*
+resources/*
+resources/outputCode/*
+resources/outputCode
 htbb3.py
