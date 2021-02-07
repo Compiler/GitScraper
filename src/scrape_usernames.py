@@ -9,43 +9,76 @@ import time
 from datetime import date
 import os
 import re
-#alternative solution : do not delete
+from itertools import cycle
+import traceback
+from lxml.html import fromstring
+import sys, getopt
 
-#import requests
-#from requests.adapters import HTTPAdapter
-#from requests.packages.urllib3.util.retry import Retry
-#
-#
-#session = requests.Session()
-#retry = Retry(connect=3, backoff_factor=0.5)
-#adapter = HTTPAdapter(max_retries=retry)
-#session.mount('http://', adapter)
-#session.mount('https://', adapter)
-#
-#session.get(url)
+def get_proxies():
+    url = 'https://free-proxy-list.net/'
+    response = requests.get(url)
+    parser = fromstring(response.text)
+    prox = set()
+    for i in parser.xpath('//tbody/tr')[:10]:
+        if i.xpath('.//td[7][contains(text(),"yes")]'):
+            #Grabbing IP and corresponding PORT
+            proxy = ":".join([i.xpath('.//td[1]/text()')[0], i.xpath('.//td[2]/text()')[0]])
+            prox.add(proxy)
+    return prox
 
-def validateUser(startURL):
-    try:
-        res = requests.get('http://github.com/'+str(startURL), headers= {'User-Agent' : "Mozilla/5.0"})
-        if(res.status_code != 200):
-            print ("Failed to load '" + startURL + "' -- response code : " + str(res.status_code))
-            if(res.status_code == 429):
-                print("Sleeping --", end='')
-                time.sleep(5)
-                print("Reattempting connection!")
-                return validateUser(startURL)
-            return -1
-        print(".", end='')
-        return 1
-    except requests.exceptions.ConnectionError:
-        print("Connection Exception caught: sleeping...")
-        time.sleep(5)
-        return validateUser(startURL)
+
+class ReqInstance:
+    def __init__(self):
+        self.proxies = set();
+        self.proxyPool = cycle({'81.12.119.189'})
+        self.counter = 0
+        self.getProxies()
+    
+    def getProxies(self):
+        url = 'https://free-proxy-list.net/'
+        response = requests.get(url)
+        parser = fromstring(response.text)
+        self.proxies = set()
+        self.proxyPool
+        for i in parser.xpath('//tbody/tr')[:10]:
+            if i.xpath('.//td[7][contains(text(),"yes")]'):
+                #Grabbing IP and corresponding PORT
+                proxy = ":".join([i.xpath('.//td[1]/text()')[0], i.xpath('.//td[2]/text()')[0]])
+                self.proxies.add(proxy)
+        self.proxyPool = cycle(self.proxies);
+                
+
+
+    def validateUser(self, startURL):
+        try:
+            proxy = next(self.proxyPool)
+            print('proxy:',proxy)
+            res = requests.get('http://github.com/'+str(startURL), headers= {'User-Agent' : "Mozilla/5.0"}, proxies={"http": proxy, "https": proxy})
+            if(res.status_code != 200):
+                print ("Failed to load '" + startURL + "' -- response code : " + str(res.status_code))
+                if(res.status_code == 429):
+                    print("Sleeping --", end='')
+                    time.sleep(5)
+                    print("Reattempting connection!")
+                    return self.validateUser(startURL)
+                return -1
+            print(".", end='')
+            return 1
+        except requests.exceptions.ConnectionError:
+            print("Connection Exception caught")
+            self.counter += 1
+            if(self.counter > 16):
+                self.getProxies()
+                print("Reestablishing proxies")
+                self.counter = 0
+
+            return self.validateUser(startURL)
 
 
 if __name__ == '__main__':
     filename = "ScrapedUsers/GithubUsernames.txt"
     startKey = ''
+    inst = ReqInstance()
     if(os.stat(filename).st_size != 0):
         with open(filename, 'r') as f:
             line = f.readlines()[-1]
@@ -56,7 +89,7 @@ if __name__ == '__main__':
     flag = True
     if(startKey == ''):
         flag = False
-    for i in range(5):
+    for i in range(4):
         for username in map(''.join, itertools.product('ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_', repeat=i)):
             if(flag):
                 if(username == startKey):
@@ -64,6 +97,6 @@ if __name__ == '__main__':
                 print(username,'skipped')
                 continue
             
-            if(validateUser(username) == 1):
+            if(inst.validateUser(username) == 1):
                 f.write('https://github.com/' + username + '\n')
     f.close()
