@@ -14,7 +14,7 @@ import traceback
 from lxml.html import fromstring
 import sys, getopt
 
-filename = "ScrapedRepos/GithubRepositoriesExtended.txt"
+filename = "ScrapedRepos/GithubRepositoriesExtended1234.txt"
 f = open(filename, "a", encoding='utf-8')
 
 
@@ -32,6 +32,8 @@ def parseContent(htmlData):
             f.write('\"'+lang.text.split()[0]+'\":\"' + href+'\"\n')
     allForks = domStruct.select('li.col-12.d-flex.width-full.py-4.border-bottom.color-border-secondary.public.fork .f6.text-gray.mt-2')
     for eachFork in allForks:
+        if(eachFork.a == None):
+            continue
         href = 'https://github.com' + eachFork.a.attrs["href"]
         lang = eachFork.span
         if(lang != None):
@@ -118,7 +120,7 @@ def test_driver():
     
 
 if __name__ == '__main__':
-    test_driver();
-    #driver();
+    #test_driver();
+    driver();
 
     
