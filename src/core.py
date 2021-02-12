@@ -22,7 +22,6 @@ def seleniumScrapeTopics(startURL):
     driver = webdriver.Chrome(chrome_options=options)
     driver.get(startURL)
     html = driver.page_source.encode('utf-8')
-
     currentPageNum = 1
     while(driver.find_element_by_xpath("/html/body/div[4]/main/div[2]/div[2]/div/div[1]/form/button") and currentPageNum < PAGE_COUNT):
         print("On page " + str(currentPageNum))
