@@ -13,7 +13,7 @@ from itertools import cycle
 import traceback
 from lxml.html import fromstring
 import sys, getopt
-
+from random import randrange
 filename = "ScrapedRepos/GithubRepositoriesExtended1234.txt"
 f = open(filename, "a", encoding='utf-8')
 
@@ -72,7 +72,9 @@ def scrapeRepos(startURL):
             print ("Failed to load '" + startURL + "' -- response code : " + str(res.status_code))
             if(res.status_code == 429):
                 print("Sleeping --", end='')
-                time.sleep(5)
+                rand = randrange(5)
+                print(rand)
+                time.sleep(rand)
                 
                 print("Reattempting connection!")
                 return scrapeRepos(startURL)
