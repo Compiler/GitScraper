@@ -2,14 +2,21 @@ import os
 import re
 
 if __name__=='__main__':
-    langToParse = 'Java'
-    repos = open('ScrapedUsers/GithubRepositories.txt', 'r', encoding='utf-8')
+    filename = 'ScrapedRepos/GithubRepositoriesExtended1234.txt'
+    repos = open(filename, 'r', encoding='utf-8')
     cloneName = ''
-    for line in repos:
-        match = re.search('^\"' + langToParse + '\".*$', line)
-        if(match != None):
-            cloneName =line[len(langToParse) + 4:-2] + '.git'
-            repoName = cloneName.rsplit('/', 1)[-1][:-4]
-            print(cloneName)
+    languages = ['Java', 'Python', 'C++']
+    for langToParse in languages:
+        for line in repos:
+            match = re.search('^\"' + langToParse + '\".*$', line)
+            if(match != None):
+                cloneName =line[len(langToParse) + 4:-1] + '.git'
+                if(cloneName[-12:-5] == 'members'):
+                    print('skipped')
+                    continue;
+                repoName = cloneName.rsplit('/', 1)[-1][:-4]
+                print(cloneName)
+                print('cmd /c "cd resources/outputCode/' + langToParse + ' && git clone ' + cloneName + '"')
+                os.system('cmd /c "cd resources/outputCode/' + langToParse + ' && git clone ' + cloneName + '"')
 
-            os.system('cmd /c "git clone ' + cloneName + ' resources/outputCode/' + repoName + '"')
+    
