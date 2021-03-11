@@ -14,7 +14,7 @@ import traceback
 from lxml.html import fromstring
 import sys, getopt
 from random import randrange
-filename = "ScrapedRepos/GithubRepositoriesExtended1234.txt"
+filename = "ScrapedRepos/combinedRepos.txt"
 f = open(filename, "a", encoding='utf-8')
 
 
@@ -120,9 +120,17 @@ def driver():
 def test_driver():
     scrapeRepos('b')
     
+def file_driver():
+    userfileName = 'ScrapedUsers/CombinedUsers.txt'
+    with open(userfileName, 'r') as theFile:
+        lines = theFile.readlines()
+    for name in lines:
+        print(name.split('/')[-1])
+        scrapeRepos(name.split('/')[1])
 
 if __name__ == '__main__':
     #test_driver();
-    driver();
+    #driver();
+    file_driver()
 
     
