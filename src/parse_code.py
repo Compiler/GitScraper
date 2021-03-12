@@ -1,10 +1,13 @@
 import sys,os
-
+import json
 JAVA_EXT = 'java'
 CPLUSPLUS_EXT = 'cpp'
 PYTHON_EXT = 'py'
-language = 'TestLang'
-outDir = "resources/ResultingJSON/"+language+'/'
+
+
+language = 'Java'
+outDir = "resources/ResultingJSON/"+language+'/code.json'
+outFile = open(outDir, mode="a")
 
 import javalang as jl
 def __get_start_end_for_node(node_to_find, data, tree):
@@ -45,18 +48,33 @@ def __get_string(start, end, data, tree):
 
 
    
-#outFile = open(outDir, mode="a")
 
 def parseSource(source_directory):
     f = open(source_directory, mode="r", encoding="utf-8")
-    data = f.read()
-    tree = jl.parse.parse(data)
-    methods = {}
-    for _, node in tree.filter(jl.tree.MethodDeclaration):
-        start, end = __get_start_end_for_node(node, data, tree)
-        methods[node.name] = __get_string(start, end, data, tree)     
-    for method in methods:
-        print(methods[method])
+    try:
+        data = f.read()
+    
+        methods = {}
+        try:
+            tree = jl.parse.parse(data)
+            methods = {}
+            for _, node in tree.filter(jl.tree.MethodDeclaration):
+                start, end = __get_start_end_for_node(node, data, tree)
+                methods[node.name] = __get_string(start, end, data, tree)     
+        except:
+            print("Error")
+
+        #print(methods)
+        for method in methods:
+            #print(methods[method])
+            data = {}
+            data['code'] = methods[method]
+            json.dump(data, outFile)
+            outFile.write('\n')
+            #print("Done")
+    except:
+        print("Couldn't encode data")
+    
 
 def parseCode(root):
     extension = ''
@@ -78,5 +96,5 @@ def parseCode(root):
 
 if __name__ == '__main__':
     parseSource('resources\outputCode\TestLang\\3D-Cal-Steps\CalSteps.java')
-    #filename = 'resources/outputCode/'
-    #parseCode(filename + language)
+    filename = 'resources/outputCode/'
+    parseCode(filename + language)
