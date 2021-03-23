@@ -6,7 +6,7 @@ PYTHON_EXT = 'py'
 
 
 language = 'Java'
-outDir = "resources/ResultingJSON/"+language+'/code.json'
+outDir = "resources\ResultingJSON\\"+language+'\code4.json'
 outFile = open(outDir, mode="a")
 
 import javalang as jl
@@ -53,7 +53,6 @@ def parseSource(source_directory):
     f = open(source_directory, mode="r", encoding="utf-8")
     try:
         data = f.read()
-    
         methods = {}
         try:
             tree = jl.parse.parse(data)
@@ -75,8 +74,9 @@ def parseSource(source_directory):
     except:
         print("Couldn't encode data")
     
-
+startFromName = ''#'\\resources\outputCode\Java\HabitatGUIJava\src\sample\Main.java'
 def parseCode(root):
+    print("Beginning")
     extension = ''
     if(language == 'Java'):
         extension = JAVA_EXT
@@ -87,14 +87,26 @@ def parseCode(root):
     else:
         print("Default language -- Testing")
         extension = JAVA_EXT
-    for path, subdirs, files in os.walk(root):
-        for name in files:
-            if(name[-len(extension):] == extension):
-                print(os.path.join(path, name))
-                parseSource(os.path.join(path, name))
+    if(startFromName == ''):
+        print("Starting from scratch...")
+        for path, subdirs, files in os.walk(root):
+            for name in files:
+                if(name[-len(extension):] == extension):
+                    print(os.path.join(path, name))
+                    parseSource(os.path.join(path, name))
+    else:
+        print("Resuming...")
+        for path, subdirs, files in os.walk(root):
+            for name in files:
+                if(name[-len(extension):] == extension):
+                    if(name != startFromName):
+                        print("Skipped",os.path.join(path, name))
+                        continue
+                    print(os.path.join(path, name))
+                    parseSource(os.path.join(path, name))
 
 
 if __name__ == '__main__':
-    parseSource('resources\outputCode\TestLang\\3D-Cal-Steps\CalSteps.java')
+    #parseSource('resources\outputCode\TestLang\\3D-Cal-Steps\CalSteps.java')
     filename = 'resources/outputCode/'
     parseCode(filename + language)
