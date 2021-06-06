@@ -86,7 +86,40 @@ def getConstructorComments(source, headers):
         data_between_header_and_comment = source[working_end_comment_pos+2:position_of_header]
         print('\'',data_between_header_and_comment,'\'')
         print("Comment pertains to header?",check_comment(data_between_header_and_comment))
-    
+        header_body = extract_body_source(source, header)
+
+
+
+
+
+def comment_replacer(match):
+    start,mid,end = match.group(1,2,3)
+    if mid is None:
+        # single line comment
+        return ''
+    elif start is not None or end is not None:
+        # multi line comment at start or end of a line
+        return ''
+    elif '\n' in mid:
+        # multi line comment with line break
+        return '\n'
+    else:
+        # multi line comment without line break
+        return ' '
+
+def remove_comments(text):
+    return re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',re.DOTALL | re.MULTILINE).sub(comment_replacer, text)
+
+
+#gets source code of method from the header and source
+def extract_body_source(source, header):
+    #first remove all data between strings and also remove all comments from source
+    cleaned_source = re.sub("\".*\"", "\"\"", source)#empties strings, maybe remove?
+    cleaned_source = re.sub("//.*\n", "", cleaned_source)
+    cleaned_source = remove_comments(cleaned_source)
+
+
+    #right now we have cleaned source, now we need to use a stack to get the code from header to end of method.
 
 #gets constuctor headers and returns those headers
 def getConstructorHeaders(source, classname):
