@@ -1,6 +1,7 @@
-import sys,os
+import sys,os,string
 import re
 import json
+import ntpath
 JAVA_EXT = 'java'
 CPLUSPLUS_EXT = 'cpp'
 PYTHON_EXT = 'py'
@@ -47,8 +48,10 @@ def __get_string(start, end, data, tree):
 
     return string
 
-import ntpath
-
+comment_types = ['//', '/*', '/**']
+def check_comment(test_str):
+    allowed = set('\t\n ')
+    return set(test_str) <= allowed
 def getJavaComments(methodNames, filename):
     classname =ntpath.basename(filename).split('.')[0]
     print(classname)
@@ -56,6 +59,34 @@ def getJavaComments(methodNames, filename):
     print(methodNames)
     source = open(filename).read()
     constructorHeaders = getConstructorHeaders(source, classname)
+    comments = getConstructorComments(source, constructorHeaders)
+
+#returns the constructor comments given their headers and source code
+def getConstructorComments(source, headers):
+    if(len(headers) == 0): return [];
+    end_comment_locations = [m.start() for m in re.finditer('\*/', source)]
+    if(len(end_comment_locations) == 0): return [];
+    print("End comment locations: ", end_comment_locations)
+
+
+    comment_header_relations={}
+    for header in headers:
+        position_of_header = source.find(header)
+        print("header pos:", position_of_header)
+        min_distance = -1
+        #find minimum distance
+        working_end_comment_pos = end_comment_locations[0]
+        for end_comment in end_comment_locations:
+            distance = position_of_header - end_comment
+            #print("Current distance:", distance)
+            if distance < 0: break;
+            minmin_distance_pos = max(min_distance, distance)
+            working_end_comment_pos = end_comment
+        #validate that there is a comment above and nothing else
+        data_between_header_and_comment = source[working_end_comment_pos+2:position_of_header]
+        print('\'',data_between_header_and_comment,'\'')
+        print("Comment pertains to header?",check_comment(data_between_header_and_comment))
+    
 
 #gets constuctor headers and returns those headers
 def getConstructorHeaders(source, classname):
@@ -138,6 +169,8 @@ if __name__ == '__main__':
     filename = 'resources/outputCode/'
     language = "TestLang"
     parseSource(filename + language + "/3d-renderer/src/matrix/Matrix.java")
+    #parseSource(filename + language + "/3d-renderer/src/matrix/MatrixException.java")
+    #parseSource(filename + language + "/3d-renderer/src/render/Camera.java")
 
     # test = open(filename + language + "/3d-renderer/src/matrix/Matrix.java").read()
     # print(test)
