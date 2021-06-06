@@ -50,15 +50,24 @@ def __get_string(start, end, data, tree):
 import ntpath
 
 def getJavaComments(methodNames, filename):
-    classname =ntpath.basename(filename)
+    classname =ntpath.basename(filename).split('.')[0]
     print(classname)
     print(filename)
     print(methodNames)
     source = open(filename).read()
+    constructorHeaders = getConstructorHeaders(source, classname)
+
+#gets constuctor headers and returns those headers
+def getConstructorHeaders(source, classname):
+    headers = []
+    while(source.find("public " + classname) != -1):
+        posOfConstructor = source.find("public " + classname)
+        posOfNewLine = source.find("\n", posOfConstructor)
+        print(source[posOfConstructor:posOfNewLine - 1])
+        headers.append(source[posOfConstructor:posOfNewLine - 1])
+        source = source[posOfNewLine:]
     
-
-
-
+    return headers
 
 
 
