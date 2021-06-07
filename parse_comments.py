@@ -8,7 +8,8 @@ PYTHON_EXT = 'py'
 
 
 language = 'Java'
-outDir = "resources\ResultingJSON\\"+language+'\code.json'
+#outDir = "resources\ResultingJSON\\"+language+'\code.json'
+outDir = "code.json"
 outFile = open(outDir, mode="a")
 
 import javalang as jl
@@ -58,14 +59,23 @@ def getJavaComments(methodNames, filename, methodCode):
     print(classname)
     print(filename)
     print(methodNames)
+    print(methodCode[methodNames[0]])
+    methodHeaders = get_method_headers(methodCode, methodNames)
     source = open(filename).read()
     source = re.sub("//.*\n", "/*removed comment*/", source) #removes single-line comments
-    print(source)
-    exit()
     constructorHeaders = getConstructorHeaders(source, classname)
-    comments = getConstructorComments(source, constructorHeaders)
+    comments = getConstructorComments(source, constructorHeaders + methodHeaders)
 
     print("Final:\n", comments)
+def get_method_headers(methodCode, methodNames):
+    method_headers = []
+    for method_name in methodNames:
+        print(method_name)
+        code = methodCode[method_name]
+        header_pos = code.find(method_name)
+        matches = re.findall("^.*"+method_name+ "[^{]*", code)
+        method_headers = method_headers + matches
+    return method_headers
 
 #returns the constructor comments given their headers and source code
 def getConstructorComments(source, headers):
@@ -76,7 +86,7 @@ def getConstructorComments(source, headers):
     for comment_type in start_comment_types: start_comment_positions = start_comment_positions + ([m.start() for m in re.finditer(comment_type, source)]);
     if(len(end_comment_locations) == 0): return [];
     print("End comment locations: ", end_comment_locations)
-
+    count = 0
     comment_header_relations={}
     for header in headers:
         position_of_header = source.find(header)
@@ -98,11 +108,15 @@ def getConstructorComments(source, headers):
             #extract the comment for header
             header_comment = extract_constructor_comment(source, header, working_end_comment_pos, start_comment_positions)
             #extract source code for header
-            header_body = extract_constructor_body_source(source, header)
+            header_body = extract_body_source(source, header)
             comment_header_relations["code"] = {"body" : header_body, "comment" : header_comment}
             print("Header:", header)
             print("Body:", header_body)
             print("Comment:", header_comment)
+            #outFile.write("{\n")
+            json.dump(comment_header_relations, outFile)
+            outFile.write(',\n')
+            #outFile.write('\n}')
     print("Headers:", headers)
     return comment_header_relations
 
@@ -162,7 +176,7 @@ def is_balanced(myStr):
         return False
 
 #gets source code of method from the header and source
-def extract_constructor_body_source(source, header):
+def extract_body_source(source, header):
     #first remove all data between strings and also remove all comments from source
     #cleaned_source = re.sub("\".*\"", "\"\"", source)#empties strings, maybe remove?
     cleaned_source = re.sub("//.*\n", "", source)
@@ -227,8 +241,8 @@ def parseSource(source_directory):
         methodNames = []
         for method in methods:
             #print(methods[method])
-            data = {}
-            data['code'] = methods[method]
+            #data = {}
+            #data['code'] = methods[method]
             methodNames.append(method)
             # json.dump(data, outFile)
             # outFile.write('\n')
@@ -274,7 +288,7 @@ def parseCode(root):
 if __name__ == '__main__':
     filename = 'resources/outputCode/'
     language = "TestLang"
-    #parseSource(filename + language + "/3d-renderer/src/matrix/Matrix.java")
+    parseSource(filename + language + "/3d-renderer/src/matrix/Matrix.java")
     #parseSource(filename + language + "/3d-renderer/src/matrix/MatrixException.java")
     parseSource(filename + language + "/3d-renderer/src/render/Camera.java")
 
