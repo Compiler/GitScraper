@@ -48,8 +48,8 @@ def __get_string(start, end, data, tree):
 
     return string
 
-start_comment_types = ['//', '/\*', '/\*\*']
-end_comment_types = ['\*/', '//.*\n']
+start_comment_types = ['/\*', '/\*\*']
+end_comment_types = ['\*/'] #'//.*\n']
 def check_comment(test_str):
     allowed = set('\t\n ')
     return set(test_str) <= allowed
@@ -59,6 +59,9 @@ def getJavaComments(methodNames, filename, methodCode):
     print(filename)
     print(methodNames)
     source = open(filename).read()
+    source = re.sub("//.*\n", "/*removed comment*/", source) #removes single-line comments
+    print(source)
+    exit()
     constructorHeaders = getConstructorHeaders(source, classname)
     comments = getConstructorComments(source, constructorHeaders)
 
@@ -74,7 +77,6 @@ def getConstructorComments(source, headers):
     if(len(end_comment_locations) == 0): return [];
     print("End comment locations: ", end_comment_locations)
 
-
     comment_header_relations={}
     for header in headers:
         position_of_header = source.find(header)
@@ -84,8 +86,7 @@ def getConstructorComments(source, headers):
         working_end_comment_pos = end_comment_locations[0]
         for end_comment in end_comment_locations:
             distance = position_of_header - end_comment
-            #print("Current distance:", distance)
-            if distance < 0: break;
+            if distance < 0: continue;
             minmin_distance_pos = max(min_distance, distance)
             working_end_comment_pos = end_comment
         #validate that there is a comment above and nothing else
@@ -99,8 +100,11 @@ def getConstructorComments(source, headers):
             #extract source code for header
             header_body = extract_constructor_body_source(source, header)
             comment_header_relations["code"] = {"body" : header_body, "comment" : header_comment}
-
-        return comment_header_relations
+            print("Header:", header)
+            print("Body:", header_body)
+            print("Comment:", header_comment)
+    print("Headers:", headers)
+    return comment_header_relations
 
 
 
@@ -116,7 +120,7 @@ def extract_constructor_comment(source, header, comment_end_position, start_comm
         minmin_distance_pos = max(min_distance, distance)
         working_start_comment_pos = start_comment
     data_between_end_and_start = source[working_start_comment_pos:comment_end_position+2]
-    ##print('\'',data_between_end_and_start,'\'')
+    #print('Comment:\'',data_between_end_and_start,'\'')
     return data_between_end_and_start
 
 def comment_replacer(match):
@@ -184,7 +188,7 @@ def extract_constructor_body_source(source, header):
             count = count + (pos - start_pos);
         count = count + 1
         if(count > len(cleaned_source)): print("Count surpassed source length"); exit();
-    print("balanced:\n", cleaned_source[header_pos:header_pos+len(header)+1 + count])
+    #print("balanced:\n", cleaned_source[header_pos:header_pos+len(header)+1 + count])
     return cleaned_source[header_pos:header_pos+len(header)+1 + count]
 
 
@@ -270,9 +274,9 @@ def parseCode(root):
 if __name__ == '__main__':
     filename = 'resources/outputCode/'
     language = "TestLang"
-    parseSource(filename + language + "/3d-renderer/src/matrix/Matrix.java")
+    #parseSource(filename + language + "/3d-renderer/src/matrix/Matrix.java")
     #parseSource(filename + language + "/3d-renderer/src/matrix/MatrixException.java")
-    #parseSource(filename + language + "/3d-renderer/src/render/Camera.java")
+    parseSource(filename + language + "/3d-renderer/src/render/Camera.java")
 
     # test = open(filename + language + "/3d-renderer/src/matrix/Matrix.java").read()
     # print(test)
