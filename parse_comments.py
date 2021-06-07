@@ -48,11 +48,12 @@ def __get_string(start, end, data, tree):
 
     return string
 
-comment_types = ['//', '/*', '/**']
+start_comment_types = ['//', '/\*', '/\*\*']
+end_comment_types = ['\*/', '//.*\n']
 def check_comment(test_str):
     allowed = set('\t\n ')
     return set(test_str) <= allowed
-def getJavaComments(methodNames, filename):
+def getJavaComments(methodNames, filename, methodCode):
     classname =ntpath.basename(filename).split('.')[0]
     print(classname)
     print(filename)
@@ -61,10 +62,15 @@ def getJavaComments(methodNames, filename):
     constructorHeaders = getConstructorHeaders(source, classname)
     comments = getConstructorComments(source, constructorHeaders)
 
+    print("Final:\n", comments)
+
 #returns the constructor comments given their headers and source code
 def getConstructorComments(source, headers):
     if(len(headers) == 0): return [];
-    end_comment_locations = [m.start() for m in re.finditer('\*/', source)]
+    start_comment_positions = []
+    end_comment_locations = []
+    for comment_type in end_comment_types: end_comment_locations = end_comment_locations + ([m.start() for m in re.finditer(comment_type, source)]);
+    for comment_type in start_comment_types: start_comment_positions = start_comment_positions + ([m.start() for m in re.finditer(comment_type, source)]);
     if(len(end_comment_locations) == 0): return [];
     print("End comment locations: ", end_comment_locations)
 
@@ -85,12 +91,33 @@ def getConstructorComments(source, headers):
         #validate that there is a comment above and nothing else
         data_between_header_and_comment = source[working_end_comment_pos+2:position_of_header]
         print('\'',data_between_header_and_comment,'\'')
-        print("Comment pertains to header?",check_comment(data_between_header_and_comment))
-        header_body = extract_body_source(source, header)
+        comment_pertains_to_header = check_comment(data_between_header_and_comment)
+        print("Comment pertains to header?", comment_pertains_to_header)
+        if(comment_pertains_to_header):
+            #extract the comment for header
+            header_comment = extract_constructor_comment(source, header, working_end_comment_pos, start_comment_positions)
+            #extract source code for header
+            header_body = extract_constructor_body_source(source, header)
+            comment_header_relations["code"] = {"body" : header_body, "comment" : header_comment}
+
+        return comment_header_relations
 
 
 
-
+def extract_constructor_comment(source, header, comment_end_position, start_comment_positions):
+    header_position = source.find(header)
+    ##print("Start comment locations:", start_comment_positions)
+    min_distance = -1
+    #find minimum distance
+    working_start_comment_pos = start_comment_positions[0]
+    for start_comment in start_comment_positions:
+        distance = header_position - start_comment
+        if distance < 0: break;
+        minmin_distance_pos = max(min_distance, distance)
+        working_start_comment_pos = start_comment
+    data_between_end_and_start = source[working_start_comment_pos:comment_end_position+2]
+    ##print('\'',data_between_end_and_start,'\'')
+    return data_between_end_and_start
 
 def comment_replacer(match):
     start,mid,end = match.group(1,2,3)
@@ -111,12 +138,54 @@ def remove_comments(text):
     return re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',re.DOTALL | re.MULTILINE).sub(comment_replacer, text)
 
 
+open_list = ["{"]
+close_list = ["}"]
+def is_balanced(myStr):
+    stack = []
+    for i in myStr:
+        if i in open_list:
+            stack.append(i)
+        elif i in close_list:
+            pos = close_list.index(i)
+            if ((len(stack) > 0) and
+                (open_list[pos] == stack[len(stack)-1])):
+                stack.pop()
+            else:
+                return False
+    if len(stack) == 0:
+        return True
+    else:
+        return False
+
 #gets source code of method from the header and source
-def extract_body_source(source, header):
+def extract_constructor_body_source(source, header):
     #first remove all data between strings and also remove all comments from source
-    cleaned_source = re.sub("\".*\"", "\"\"", source)#empties strings, maybe remove?
-    cleaned_source = re.sub("//.*\n", "", cleaned_source)
+    #cleaned_source = re.sub("\".*\"", "\"\"", source)#empties strings, maybe remove?
+    cleaned_source = re.sub("//.*\n", "", source)
     cleaned_source = remove_comments(cleaned_source)
+    header_pos = cleaned_source.find(header)
+    print("Header( ", header_pos,"):", header)
+    print(cleaned_source[header_pos:header_pos+len(header)])
+    count = 0
+    while(not is_balanced(cleaned_source[header_pos:header_pos+len(header)+1 + count])):
+        #find opening quote
+        pos = header_pos+len(header) + count
+        if cleaned_source[pos: pos +1] == '\"':
+            start_pos = pos
+            pos = pos + 1
+            inside_quotes = True
+            while(inside_quotes):
+                if(cleaned_source[pos: pos +1] == "\""):
+                    inside_quotes = False
+                    if(cleaned_source[pos-1: pos] == "\\"):
+                        inside_quotes = True
+                pos = pos + 1
+            if(not inside_quotes): print("Skipped:'", cleaned_source[start_pos:pos],"'");
+            count = count + (pos - start_pos);
+        count = count + 1
+        if(count > len(cleaned_source)): print("Count surpassed source length"); exit();
+    print("balanced:\n", cleaned_source[header_pos:header_pos+len(header)+1 + count])
+    return cleaned_source[header_pos:header_pos+len(header)+1 + count]
 
 
     #right now we have cleaned source, now we need to use a stack to get the code from header to end of method.
@@ -162,7 +231,7 @@ def parseSource(source_directory):
             #print("Done")
 
         #print(methods[0])
-        getJavaComments(methodNames, source_directory)
+        getJavaComments(methodNames, source_directory, methods)
     except:
         print("Couldn't encode data")
     
