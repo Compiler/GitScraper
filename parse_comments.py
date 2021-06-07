@@ -115,7 +115,7 @@ def getConstructorComments(source, headers):
             print("Comment:", header_comment)
             #outFile.write("{\n")
             json.dump(comment_header_relations, outFile)
-            outFile.write(',\n')
+            outFile.write('\n')
             #outFile.write('\n}')
     print("Headers:", headers)
     return comment_header_relations
