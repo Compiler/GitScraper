@@ -112,6 +112,7 @@ def getConstructorComments(source, headers):
             comment_header_relations["code"] = {"body" : header_body, "comment" : header_comment}
             print("Header:", header)
             print("Body:", header_body)
+            if(len(header_body) < 25 or len(header_comment) < 2): continue;
             print("Comment:", header_comment)
             #outFile.write("{\n")
             json.dump(comment_header_relations, outFile)
@@ -288,11 +289,11 @@ def parseCode(root):
 if __name__ == '__main__':
     filename = 'resources/outputCode/'
     language = "TestLang"
-    parseSource(filename + language + "/3d-renderer/src/matrix/Matrix.java")
+    #parseSource(filename + language + "/3d-renderer/src/matrix/Matrix.java")
     #parseSource(filename + language + "/3d-renderer/src/matrix/MatrixException.java")
-    parseSource(filename + language + "/3d-renderer/src/render/Camera.java")
+    #parseSource(filename + language + "/3d-renderer/src/render/Camera.java")
 
     # test = open(filename + language + "/3d-renderer/src/matrix/Matrix.java").read()
     # print(test)
     # print(re.search("^(.+)\n\(", test))
-#    parseCode(filename + language)
+    parseCode(filename + language)
