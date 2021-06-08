@@ -9,7 +9,7 @@ class ClassLuke{
     /*this is another method*/
     public void sup(){
         char messup = '}';
-        String thing = "}}}}";
+        String thing = "{{{{}}}}}}}}";
 
     }
 }

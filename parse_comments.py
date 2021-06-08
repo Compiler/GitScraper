@@ -213,13 +213,7 @@ open_list = ["{"]
 close_list = ["}"]
 def is_balanced(myStr):
     stack = []
-    for char_index in range(0, len(myStr)):
-        i = myStr[char_index]
-        if i == "'":#begin skipping to end of single quote
-            pass
-        if i == '"':#begin skipping to end of quote
-            pass
-
+    for i in myStr:
         if i in open_list:
             stack.append(i)
         elif i in close_list:
@@ -244,15 +238,66 @@ def extract_body_source(source, header):
     #print("Header( ", header_pos,"):", header)
     #print(cleaned_source[header_pos:header_pos+len(header)])
     count = 0
+    source_to_balance = cleaned_source
     print("Started balancing method for header: ", header)
-    while(not is_balanced(cleaned_source[header_pos:header_pos+len(header)+1 + count])):
+    print("Starting source:", source_to_balance)
+    amount_removed = 0
+    while(not is_balanced(source_to_balance[header_pos:header_pos+len(header)+1 + count])):
+        print(source_to_balance[header_pos:header_pos+len(header)+1 + count])
         #find opening quote
         pos = header_pos+len(header) + count
-        count = count + 1
-        if(count > len(cleaned_source)): return "NO";
+        moved_index = False
+        if source_to_balance[pos: pos +1] == '\'':
+            print("Found '")
+            amount_moved = 0
+            pos = pos + 1
+            moved_index = True
+
+            inside_single_quotes = True
+            start_single_quote_pos = pos
+            while(inside_single_quotes):
+                if(source_to_balance[pos: pos +1] == "\'"):
+                    inside_single_quotes = False
+                pos = pos + 1
+                count = count + 1
+                amount_moved = amount_moved + 1
+            print("~~Skip:'",source_to_balance[start_single_quote_pos : pos-1],"'")
+            distance = pos - start_single_quote_pos-1
+
+#TODO FIGURE OUT WHAT IS WRONG WITH THIS
+
+            print("First 1/2:",  source_to_balance[header_pos:start_single_quote_pos-1]) 
+            source_to_balance = source_to_balance[header_pos:start_single_quote_pos-1] + source_to_balance[start_single_quote_pos-1 + amount_moved:]
+            print("Sent source:", source_to_balance)
+            amount_removed = amount_removed + distance
+        #this section handles skipping past quotes
+        if source_to_balance[pos: pos +1] == '"': #first quote wont have anything behind it
+            print("!!!!!!!!!!!!!!!! Found \"")
+            pos = pos + 1
+            moved_index = True
+            inside_quotes = True
+            start_quote_pos = pos
+            while(inside_quotes):
+                if(source_to_balance[pos: pos +1] == "\""):
+                    inside_quotes = False
+                    if(source_to_balance[pos-2: pos] == "\\\\"):
+                        inside_quotes = True
+                pos = pos + 1
+            pos = pos + 1
+            print("--Skip:'",source_to_balance[start_quote_pos : pos],"'")
+            distance = pos - start_quote_pos
+            source_to_balance = source_to_balance[header_pos:start_quote_pos] + source_to_balance[pos:]
+            amount_removed = amount_removed + distance
+            count = pos
+
+        if not moved_index: count = count + 1
+        #print("Count:", count)
+        #print("len(source_to_balance):", len(source_to_balance))
+        if(count > len(source_to_balance)): return "NO";
     print("Finished")
     #print("balanced:\n", cleaned_source[header_pos:header_pos+len(header)+1 + count])
-    return cleaned_source[header_pos:header_pos+len(header)+1 + count]
+    print("Source:", cleaned_source[header_pos:header_pos+len(header)+1 + count + amount_removed])
+    return cleaned_source[header_pos:header_pos+len(header)+1 + count + amount_removed]
 
 
     #right now we have cleaned source, now we need to use a stack to get the code from header to end of method.
