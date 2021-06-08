@@ -56,20 +56,19 @@ def check_comment(test_str):
     return set(test_str) <= allowed
 def getJavaComments(methodNames, filename, methodCode):
     classname =ntpath.basename(filename).split('.')[0]
-    ####print(classname)
-    ####print(filename)
-    ####print(methodNames)
-    ####print(methodCode[methodNames[0]])
+    print(classname)
+    print(filename)
+    print(methodNames)
     methodHeaders = get_method_headers(methodCode, methodNames)
     source = open(filename, encoding="utf-8").read()
     constructorHeaders = getConstructorHeaders(source, classname)
-    comments = getConstructorComments(source, constructorHeaders + methodHeaders)
+    comments = getMethodComments(source, constructorHeaders + methodHeaders)
 
-    ####print("Final:\n", comments)
+    print("Final:\n", comments)
 def get_method_headers(methodCode, methodNames):
     method_headers = []
     for method_name in methodNames:
-        ####print(method_name)
+        print(method_name)
         code = methodCode[method_name]
         header_pos = code.find(method_name)
         matches = re.findall("^.*"+method_name+ "[^{]*", code)
@@ -77,19 +76,22 @@ def get_method_headers(methodCode, methodNames):
     return method_headers
 
 #returns the constructor comments given their headers and source code
-def getConstructorComments(source, headers):
+def getMethodComments(source, headers):
     if(len(headers) == 0): return [];
     start_comment_positions = []
     end_comment_locations = []
     for comment_type in end_comment_types: end_comment_locations = end_comment_locations + ([m.start() for m in re.finditer(comment_type, source)]);
     for comment_type in start_comment_types: start_comment_positions = start_comment_positions + ([m.start() for m in re.finditer(comment_type, source)]);
+
     if(len(end_comment_locations) == 0): return [];
-    ####print("End comment locations: ", end_comment_locations)
+    end_comment_locations = sorted(end_comment_locations)
+    start_comment_positions = sorted(start_comment_positions)
+    print("End comment locations: ", end_comment_locations)
     count = 0
     comment_header_relations={}
     for header in headers:
         position_of_header = source.find(header)
-        ####print("header pos:", position_of_header)
+        print("header pos:", position_of_header)
         min_distance = -1
         #find minimum distance
         working_end_comment_pos = end_comment_locations[0]
@@ -100,29 +102,29 @@ def getConstructorComments(source, headers):
             working_end_comment_pos = end_comment
         #validate that there is a comment above and nothing else
         data_between_header_and_comment = source[working_end_comment_pos+2:position_of_header]
-        ####print('\'',data_between_header_and_comment,'\'')
+        print('\'',data_between_header_and_comment,'\'')
         comment_pertains_to_header = check_comment(data_between_header_and_comment)
-        ####print("Comment pertains to header?", comment_pertains_to_header)
+        print("Comment pertains to header?", comment_pertains_to_header)
         if(comment_pertains_to_header):
             #extract the comment for header
-            header_comment = extract_constructor_comment(source, header, working_end_comment_pos, start_comment_positions)
+            header_comment = extract_comment(source, header, working_end_comment_pos, start_comment_positions)
             #extract source code for header
             header_body = extract_body_source(source, header)
             comment_header_relations["code"] = {"body" : header_body, "comment" : header_comment}
-            ####print("Header:", header)
-            ####print("Body:", header_body)
+            print("Header:", header)
+            print("Body:", header_body)
             if(len(header_body) < 25 or len(header_comment) < 2): continue;
-            ####print("Comment:", header_comment)
+            print("Comment:", header_comment)
             #outFile.write("{\n")
             json.dump(comment_header_relations, outFile)
             outFile.write('\n')
             #outFile.write('\n}')
-    ####print("Headers:", headers)
+    print("Headers:", headers)
     return comment_header_relations
 
 
 
-def extract_constructor_comment(source, header, comment_end_position, start_comment_positions):
+def extract_comment(source, header, comment_end_position, start_comment_positions):
     header_position = source.find(header)
     ##print("Start comment locations:", start_comment_positions)
     min_distance = -1
@@ -144,17 +146,34 @@ def remove_comments(text):
     pos = 0
     while(pos < len(text) - 2):
         moved_index = False
+        #this section handles skipping past single-quotes
+        if text[pos: pos +1] == '\'':
+            pos = pos + 1
+            moved_index = True
+
+            inside_single_quotes = True
+            start_single_quote_pos = pos
+            while(inside_single_quotes and len(text) - 2 > pos):
+                if(text[pos: pos +1] == "\'"):
+                    inside_single_quotes = False
+                pos = pos + 1
+            print("Skipped:'",text[start_single_quote_pos : pos-1],"'")
+            print("1:",pos)
+
         #this section handles skipping past quotes
         if text[pos: pos +1] == '\"': #first quote wont have anything behind it
+            pos = pos + 1
             moved_index = True
             inside_quotes = True
             start_quote_pos = pos
-            while(inside_quotes and len(text) - 2 < pos):
+            while(inside_quotes and len(text) - 2 > pos):
                 if(text[pos: pos +1] == "\""):
                     inside_quotes = False
                     if(text[pos-2: pos] == "\\\\"):
                         inside_quotes = True
                 pos = pos + 1
+            pos = pos + 1
+            print("2:",pos)
             print("Skipped:'",text[start_quote_pos : pos],"'")
         #now we know we aren't in a quote and can look for comments outside of quotes
         #first we will check for single line comments
@@ -165,11 +184,12 @@ def remove_comments(text):
                 moved_index = True
                 while(pos < len(text) - 2 and text[pos: pos+1] != '\n'):
                     pos = pos + 1
-                ####print("1: Skipping: '", text[skip_pos_start : pos], "'")
+                print("1: Skipping: '", text[skip_pos_start : pos], "'")
                 text = text[0:skip_pos_start] + text[pos:]
                 distance_removed = pos - skip_pos_start
-                print("Distance moved: ", distance_removed)
+                #print("Distance moved: ", distance_removed)
                 pos = pos - distance_removed + 1
+                print("3:",pos)
 
             #now we check for multiline ones
             if  text[pos: pos+2] == '/*':
@@ -178,12 +198,13 @@ def remove_comments(text):
                 moved_index = True
                 while(pos < len(text) - 2 and text[pos: pos+2] != '*/'):
                     pos = pos + 1
-                ####print("2: Skipping: '", text[skip_pos_start : pos], "'")
+                print("2: Skipping: '", text[skip_pos_start : pos], "'")
                 text = text[0:skip_pos_start] + text[pos+2:]
                 distance_removed = pos - skip_pos_start
-                print("Distance moved: ", distance_removed)
+                #print("Distance moved: ", distance_removed)
                 pos = pos - distance_removed + 1
-        if not moved_index : pos = pos + 1;
+                print("4:",pos)
+        if not moved_index: pos = pos + 1;
     return text
     #return re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',re.DOTALL | re.MULTILINE).sub(comment_replacer, text)
 
@@ -192,7 +213,13 @@ open_list = ["{"]
 close_list = ["}"]
 def is_balanced(myStr):
     stack = []
-    for i in myStr:
+    for char_index in range(0, len(myStr)):
+        i = myStr[char_index]
+        if i == "'":#begin skipping to end of single quote
+            pass
+        if i == '"':#begin skipping to end of quote
+            pass
+
         if i in open_list:
             stack.append(i)
         elif i in close_list:
@@ -212,28 +239,18 @@ def extract_body_source(source, header):
     #first remove all data between strings and also remove all comments from source
     #cleaned_source = re.sub("\".*\"", "\"\"", source)#empties strings, maybe remove?
     cleaned_source = remove_comments(source)
+    print("Removed comments")
     header_pos = cleaned_source.find(header)
     #print("Header( ", header_pos,"):", header)
     #print(cleaned_source[header_pos:header_pos+len(header)])
     count = 0
+    print("Started balancing method for header: ", header)
     while(not is_balanced(cleaned_source[header_pos:header_pos+len(header)+1 + count])):
         #find opening quote
         pos = header_pos+len(header) + count
-        if cleaned_source[pos: pos +1] == '\"':
-            start_pos = pos
-            pos = pos + 1
-            inside_quotes = True
-
-            while(inside_quotes):
-                if(cleaned_source[pos: pos +1] == "\""):
-                    inside_quotes = False
-                    if(cleaned_source[pos-1: pos] == "\\" and cleaned_source[pos-2: pos-1] != "\\"):
-                        inside_quotes = True
-                pos = pos + 1
-            if(not inside_quotes): pass;#print("Skipped:'", cleaned_source[start_pos:pos],"'");
-            count = count + (pos - start_pos);
         count = count + 1
         if(count > len(cleaned_source)): return "NO";
+    print("Finished")
     #print("balanced:\n", cleaned_source[header_pos:header_pos+len(header)+1 + count])
     return cleaned_source[header_pos:header_pos+len(header)+1 + count]
 
@@ -342,7 +359,7 @@ if __name__ == '__main__':
     # print(test)
     # print(re.search("^(.+)\n\(", test))
 
-
     #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\09-08-Projeto-Bicicleta\\src\\Bicicleta.java") #UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe1 in position 27: invalid continuation byte
-    parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\1.-Java-Basics-Homeworks\\3_Java_Loops_Methods_Classes\\lib\\joda-time-2.3\\src\\main\\java\\org\\joda\\time\convert\\StringConverter.java") 
+    #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\1.-Java-Basics-Homeworks\\3_Java_Loops_Methods_Classes\\lib\\joda-time-2.3\\src\\main\\java\\org\\joda\\time\convert\\StringConverter.java") 
+    parseSource("TestFile.java") 
     #parseCode(filename + language)
