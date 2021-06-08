@@ -56,21 +56,21 @@ def check_comment(test_str):
     return set(test_str) <= allowed
 def getJavaComments(methodNames, filename, methodCode):
     classname =ntpath.basename(filename).split('.')[0]
-    print(classname)
-    print(filename)
-    print(methodNames)
-    print(methodCode[methodNames[0]])
+    ####print(classname)
+    ####print(filename)
+    ####print(methodNames)
+    ####print(methodCode[methodNames[0]])
     methodHeaders = get_method_headers(methodCode, methodNames)
     source = open(filename).read()
     source = re.sub("//.*\n", "/*removed comment*/", source) #removes single-line comments
     constructorHeaders = getConstructorHeaders(source, classname)
     comments = getConstructorComments(source, constructorHeaders + methodHeaders)
 
-    print("Final:\n", comments)
+    ####print("Final:\n", comments)
 def get_method_headers(methodCode, methodNames):
     method_headers = []
     for method_name in methodNames:
-        print(method_name)
+        ####print(method_name)
         code = methodCode[method_name]
         header_pos = code.find(method_name)
         matches = re.findall("^.*"+method_name+ "[^{]*", code)
@@ -85,12 +85,12 @@ def getConstructorComments(source, headers):
     for comment_type in end_comment_types: end_comment_locations = end_comment_locations + ([m.start() for m in re.finditer(comment_type, source)]);
     for comment_type in start_comment_types: start_comment_positions = start_comment_positions + ([m.start() for m in re.finditer(comment_type, source)]);
     if(len(end_comment_locations) == 0): return [];
-    print("End comment locations: ", end_comment_locations)
+    ####print("End comment locations: ", end_comment_locations)
     count = 0
     comment_header_relations={}
     for header in headers:
         position_of_header = source.find(header)
-        print("header pos:", position_of_header)
+        ####print("header pos:", position_of_header)
         min_distance = -1
         #find minimum distance
         working_end_comment_pos = end_comment_locations[0]
@@ -101,24 +101,24 @@ def getConstructorComments(source, headers):
             working_end_comment_pos = end_comment
         #validate that there is a comment above and nothing else
         data_between_header_and_comment = source[working_end_comment_pos+2:position_of_header]
-        print('\'',data_between_header_and_comment,'\'')
+        ####print('\'',data_between_header_and_comment,'\'')
         comment_pertains_to_header = check_comment(data_between_header_and_comment)
-        print("Comment pertains to header?", comment_pertains_to_header)
+        ####print("Comment pertains to header?", comment_pertains_to_header)
         if(comment_pertains_to_header):
             #extract the comment for header
             header_comment = extract_constructor_comment(source, header, working_end_comment_pos, start_comment_positions)
             #extract source code for header
             header_body = extract_body_source(source, header)
             comment_header_relations["code"] = {"body" : header_body, "comment" : header_comment}
-            print("Header:", header)
-            print("Body:", header_body)
+            ####print("Header:", header)
+            ####print("Body:", header_body)
             if(len(header_body) < 25 or len(header_comment) < 2): continue;
-            print("Comment:", header_comment)
+            ####print("Comment:", header_comment)
             #outFile.write("{\n")
             json.dump(comment_header_relations, outFile)
             outFile.write('\n')
             #outFile.write('\n}')
-    print("Headers:", headers)
+    ####print("Headers:", headers)
     return comment_header_relations
 
 
@@ -183,8 +183,8 @@ def extract_body_source(source, header):
     cleaned_source = re.sub("//.*\n", "", source)
     cleaned_source = remove_comments(cleaned_source)
     header_pos = cleaned_source.find(header)
-    print("Header( ", header_pos,"):", header)
-    print(cleaned_source[header_pos:header_pos+len(header)])
+    #print("Header( ", header_pos,"):", header)
+    #print(cleaned_source[header_pos:header_pos+len(header)])
     count = 0
     while(not is_balanced(cleaned_source[header_pos:header_pos+len(header)+1 + count])):
         #find opening quote
@@ -199,10 +199,10 @@ def extract_body_source(source, header):
                     if(cleaned_source[pos-1: pos] == "\\"):
                         inside_quotes = True
                 pos = pos + 1
-            if(not inside_quotes): print("Skipped:'", cleaned_source[start_pos:pos],"'");
+            if(not inside_quotes): pass;#print("Skipped:'", cleaned_source[start_pos:pos],"'");
             count = count + (pos - start_pos);
         count = count + 1
-        if(count > len(cleaned_source)): print("Count surpassed source length"); exit();
+        if(count > len(cleaned_source)): pass#print("Count surpassed source length"); exit();
     #print("balanced:\n", cleaned_source[header_pos:header_pos+len(header)+1 + count])
     return cleaned_source[header_pos:header_pos+len(header)+1 + count]
 
@@ -215,7 +215,7 @@ def getConstructorHeaders(source, classname):
     while(source.find("public " + classname) != -1):
         posOfConstructor = source.find("public " + classname)
         posOfNewLine = source.find("\n", posOfConstructor)
-        print(source[posOfConstructor:posOfNewLine - 1])
+        #print(source[posOfConstructor:posOfNewLine - 1])
         headers.append(source[posOfConstructor:posOfNewLine - 1])
         source = source[posOfNewLine:]
     
@@ -287,8 +287,12 @@ def parseCode(root):
 
 
 if __name__ == '__main__':
-    filename = 'resources/outputCode/'
-    language = "TestLang"
+    #filename = 'resources/outputCode/'
+    #language = "TestLang"
+
+    filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\'
+    language = "Java"
+
     #parseSource(filename + language + "/3d-renderer/src/matrix/Matrix.java")
     #parseSource(filename + language + "/3d-renderer/src/matrix/MatrixException.java")
     #parseSource(filename + language + "/3d-renderer/src/render/Camera.java")
