@@ -143,22 +143,48 @@ def extract_constructor_comment(source, header, comment_end_position, start_comm
 #TODO: rewrite this 
 def remove_comments(text):
     pos = 0
-    while(pos < len(text)):
+    while(pos < len(text) - 2):
+        moved_index = False
+        print("Starting here: '", text[pos:pos+3])
         #this section handles skipping past quotes
-        if text[pos: pos +1] == '\"':
+        if text[pos: pos +1] == '\"': #first quote wont have anything behind it
             pos = pos + 1
+            moved_index = True
             inside_quotes = True
 
             while(inside_quotes):
                 if(text[pos: pos +1] == "\""):
                     inside_quotes = False
-                    if(text[pos-1: pos] == "\\" and text[pos-2: pos-1] != "\\"):
+                    if(text[pos-2: pos] == "\\\\"):
                         inside_quotes = True
+
                 pos = pos + 1
         #now we know we aren't in a quote and can look for comments outside of quotes
-        elif text[pos: pos+1]:
-            
-            
+        #first we will check for single line comments
+        else:
+            if text[pos: pos+2] == '//' : 
+                skip_pos_start = pos;
+                pos = pos + 2
+                moved_index = True
+                while(pos < len(text) - 2 and text[pos: pos+1] != '\n'):
+                    pos = pos + 1
+                print("1: Skipping: '", text[skip_pos_start : pos], "'")
+                text = text[0:skip_pos_start] + text[pos:]
+                distance_removed = pos - skip_pos_start
+                pos = pos - distance_removed
+
+            #now we check for multiline ones
+            if  text[pos: pos+2] == '/*':
+                skip_pos_start = pos;
+                pos = pos + 2
+                moved_index = True
+                while(pos < len(text) - 2 and text[pos: pos+2] != '*/'):
+                    pos = pos + 1
+                print("2: Skipping: '", text[skip_pos_start : pos], "'")
+                text = text[0:skip_pos_start] + text[pos+2:]
+                distance_removed = pos - skip_pos_start
+                pos = pos - distance_removed
+        if not moved_index : pos = pos + 1;
     return text
     #return re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',re.DOTALL | re.MULTILINE).sub(comment_replacer, text)
 
@@ -306,8 +332,10 @@ if __name__ == '__main__':
     #parseSource(filename + language + "/3d-renderer/src/matrix/MatrixException.java")
     #parseSource(filename + language + "/3d-renderer/src/render/Camera.java")
     #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\parser\\ParseException.java")
-    parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\02June2018\\src\\test\\java\\SeleniumGrid\\Grid_Practice_23March_2018.java")
-
+    test_file = open("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\02June2018\\src\\test\\java\\SeleniumGrid\\Grid_Practice_23March_2018.java")
+    print(remove_comments(test_file.read()))
+    #print(remove_comments("/*hello*/\ncap.setBrowserName(\"chrome //this is cool\");"))
+    #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\02June2018\\src\\test\\java\\SeleniumGrid\\Grid_Practice_23March_2018.java")
     # test = open(filename + language + "/3d-renderer/src/matrix/Matrix.java").read()
     # print(test)
     # print(re.search("^(.+)\n\(", test))
