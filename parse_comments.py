@@ -142,6 +142,23 @@ def extract_constructor_comment(source, header, comment_end_position, start_comm
 
 #TODO: rewrite this 
 def remove_comments(text):
+    pos = 0
+    while(pos < len(text)):
+        #this section handles skipping past quotes
+        if text[pos: pos +1] == '\"':
+            pos = pos + 1
+            inside_quotes = True
+
+            while(inside_quotes):
+                if(text[pos: pos +1] == "\""):
+                    inside_quotes = False
+                    if(text[pos-1: pos] == "\\" and text[pos-2: pos-1] != "\\"):
+                        inside_quotes = True
+                pos = pos + 1
+        #now we know we aren't in a quote and can look for comments outside of quotes
+        elif text[pos: pos+1]:
+            
+            
     return text
     #return re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',re.DOTALL | re.MULTILINE).sub(comment_replacer, text)
 
