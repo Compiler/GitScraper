@@ -62,7 +62,6 @@ def getJavaComments(methodNames, filename, methodCode):
     ####print(methodCode[methodNames[0]])
     methodHeaders = get_method_headers(methodCode, methodNames)
     source = open(filename, encoding="utf-8").read()
-    source = re.sub("//.*\n", "/*removed comment*/", source) #removes single-line comments
     constructorHeaders = getConstructorHeaders(source, classname)
     comments = getConstructorComments(source, constructorHeaders + methodHeaders)
 
@@ -145,20 +144,18 @@ def remove_comments(text):
     pos = 0
     while(pos < len(text) - 2):
         moved_index = False
-        print("Starting here: '", text[pos:pos+3])
         #this section handles skipping past quotes
         if text[pos: pos +1] == '\"': #first quote wont have anything behind it
-            pos = pos + 1
             moved_index = True
             inside_quotes = True
-
-            while(inside_quotes):
+            start_quote_pos = pos
+            while(inside_quotes and len(text) - 2 < pos):
                 if(text[pos: pos +1] == "\""):
                     inside_quotes = False
                     if(text[pos-2: pos] == "\\\\"):
                         inside_quotes = True
-
                 pos = pos + 1
+            print("Skipped:'",text[start_quote_pos : pos],"'")
         #now we know we aren't in a quote and can look for comments outside of quotes
         #first we will check for single line comments
         else:
@@ -168,10 +165,11 @@ def remove_comments(text):
                 moved_index = True
                 while(pos < len(text) - 2 and text[pos: pos+1] != '\n'):
                     pos = pos + 1
-                print("1: Skipping: '", text[skip_pos_start : pos], "'")
+                ####print("1: Skipping: '", text[skip_pos_start : pos], "'")
                 text = text[0:skip_pos_start] + text[pos:]
                 distance_removed = pos - skip_pos_start
-                pos = pos - distance_removed
+                print("Distance moved: ", distance_removed)
+                pos = pos - distance_removed + 1
 
             #now we check for multiline ones
             if  text[pos: pos+2] == '/*':
@@ -180,10 +178,11 @@ def remove_comments(text):
                 moved_index = True
                 while(pos < len(text) - 2 and text[pos: pos+2] != '*/'):
                     pos = pos + 1
-                print("2: Skipping: '", text[skip_pos_start : pos], "'")
+                ####print("2: Skipping: '", text[skip_pos_start : pos], "'")
                 text = text[0:skip_pos_start] + text[pos+2:]
                 distance_removed = pos - skip_pos_start
-                pos = pos - distance_removed
+                print("Distance moved: ", distance_removed)
+                pos = pos - distance_removed + 1
         if not moved_index : pos = pos + 1;
     return text
     #return re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',re.DOTALL | re.MULTILINE).sub(comment_replacer, text)
@@ -257,8 +256,12 @@ def getConstructorHeaders(source, classname):
 
 
 def parseSource(source_directory):
-    f = open(source_directory, mode="r", encoding="utf-8")
-    data = f.read()
+    try:
+        f = open(source_directory, mode="r", encoding="utf-8")
+        data = f.read()
+    except:
+        print("Failed to read data")
+        return
     search = re.findall("/\*", data)
     # if(len(search) == 0):
     #     search = re.findall("^[^\"]*//.*$", data)
@@ -285,9 +288,7 @@ def parseSource(source_directory):
         # outFile.write('\n')
         #print("Done")
 
-    #print(methods[0])
     getJavaComments(methodNames, source_directory, methods)
-    #print("Couldn't encode data")
     
 startFromName = ''#'\\resources\outputCode\Java\HabitatGUIJava\src\sample\Main.java'
 def parseCode(root):
@@ -332,11 +333,16 @@ if __name__ == '__main__':
     #parseSource(filename + language + "/3d-renderer/src/matrix/MatrixException.java")
     #parseSource(filename + language + "/3d-renderer/src/render/Camera.java")
     #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\parser\\ParseException.java")
-    test_file = open("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\02June2018\\src\\test\\java\\SeleniumGrid\\Grid_Practice_23March_2018.java")
-    print(remove_comments(test_file.read()))
+    #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\juci\\LispWriter.java")
+    #test_file = open("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\02June2018\\src\\test\\java\\SeleniumGrid\\Grid_Practice_23March_2018.java")
+    #print(remove_comments(test_file.read()))
     #print(remove_comments("/*hello*/\ncap.setBrowserName(\"chrome //this is cool\");"))
     #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\02June2018\\src\\test\\java\\SeleniumGrid\\Grid_Practice_23March_2018.java")
     # test = open(filename + language + "/3d-renderer/src/matrix/Matrix.java").read()
     # print(test)
     # print(re.search("^(.+)\n\(", test))
+
+
+    #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\09-08-Projeto-Bicicleta\\src\\Bicicleta.java") #UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe1 in position 27: invalid continuation byte
+    parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\1.-Java-Basics-Homeworks\\3_Java_Loops_Methods_Classes\\lib\\joda-time-2.3\\src\\main\\java\\org\\joda\\time\convert\\StringConverter.java") 
     #parseCode(filename + language)
