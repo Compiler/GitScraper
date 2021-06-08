@@ -61,7 +61,7 @@ def getJavaComments(methodNames, filename, methodCode):
     ####print(methodNames)
     ####print(methodCode[methodNames[0]])
     methodHeaders = get_method_headers(methodCode, methodNames)
-    source = open(filename).read()
+    source = open(filename, encoding="utf-8").read()
     source = re.sub("//.*\n", "/*removed comment*/", source) #removes single-line comments
     constructorHeaders = getConstructorHeaders(source, classname)
     comments = getConstructorComments(source, constructorHeaders + methodHeaders)
@@ -138,23 +138,12 @@ def extract_constructor_comment(source, header, comment_end_position, start_comm
     #print('Comment:\'',data_between_end_and_start,'\'')
     return data_between_end_and_start
 
-def comment_replacer(match):
-    start,mid,end = match.group(1,2,3)
-    if mid is None:
-        # single line comment
-        return ''
-    elif start is not None or end is not None:
-        # multi line comment at start or end of a line
-        return ''
-    elif '\n' in mid:
-        # multi line comment with line break
-        return '\n'
-    else:
-        # multi line comment without line break
-        return ' '
 
+
+#TODO: rewrite this 
 def remove_comments(text):
-    return re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',re.DOTALL | re.MULTILINE).sub(comment_replacer, text)
+    return text
+    #return re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',re.DOTALL | re.MULTILINE).sub(comment_replacer, text)
 
 
 open_list = ["{"]
@@ -180,8 +169,7 @@ def is_balanced(myStr):
 def extract_body_source(source, header):
     #first remove all data between strings and also remove all comments from source
     #cleaned_source = re.sub("\".*\"", "\"\"", source)#empties strings, maybe remove?
-    cleaned_source = re.sub("//.*\n", "", source)
-    cleaned_source = remove_comments(cleaned_source)
+    cleaned_source = remove_comments(source)
     header_pos = cleaned_source.find(header)
     #print("Header( ", header_pos,"):", header)
     #print(cleaned_source[header_pos:header_pos+len(header)])
@@ -193,16 +181,17 @@ def extract_body_source(source, header):
             start_pos = pos
             pos = pos + 1
             inside_quotes = True
+
             while(inside_quotes):
                 if(cleaned_source[pos: pos +1] == "\""):
                     inside_quotes = False
-                    if(cleaned_source[pos-1: pos] == "\\"):
+                    if(cleaned_source[pos-1: pos] == "\\" and cleaned_source[pos-2: pos-1] != "\\"):
                         inside_quotes = True
                 pos = pos + 1
             if(not inside_quotes): pass;#print("Skipped:'", cleaned_source[start_pos:pos],"'");
             count = count + (pos - start_pos);
         count = count + 1
-        if(count > len(cleaned_source)): pass#print("Count surpassed source length"); exit();
+        if(count > len(cleaned_source)): return "NO";
     #print("balanced:\n", cleaned_source[header_pos:header_pos+len(header)+1 + count])
     return cleaned_source[header_pos:header_pos+len(header)+1 + count]
 
@@ -226,33 +215,36 @@ def getConstructorHeaders(source, classname):
 
 def parseSource(source_directory):
     f = open(source_directory, mode="r", encoding="utf-8")
+    data = f.read()
+    search = re.findall("/\*", data)
+    # if(len(search) == 0):
+    #     search = re.findall("^[^\"]*//.*$", data)
+    #     if(len(search) == 0): return
+    methods = {}
     try:
-        data = f.read()
+        tree = jl.parse.parse(data)
         methods = {}
-        try:
-            tree = jl.parse.parse(data)
-            methods = {}
-            for _, node in tree.filter(jl.tree.MethodDeclaration):
-                start, end = __get_start_end_for_node(node, data, tree)
-                methods[node.name] = __get_string(start, end, data, tree)     
-        except:
-            print("Error")
-
-        #print(methods)
-        methodNames = []
-        for method in methods:
-            #print(methods[method])
-            #data = {}
-            #data['code'] = methods[method]
-            methodNames.append(method)
-            # json.dump(data, outFile)
-            # outFile.write('\n')
-            #print("Done")
-
-        #print(methods[0])
-        getJavaComments(methodNames, source_directory, methods)
+        for _, node in tree.filter(jl.tree.MethodDeclaration):
+            start, end = __get_start_end_for_node(node, data, tree)
+            methods[node.name] = __get_string(start, end, data, tree)     
     except:
-        print("Couldn't encode data")
+        print("Error, couldn't parse javalang")
+        return
+
+    #print(methods)
+    methodNames = []
+    for method in methods:
+        #print(methods[method])
+        #data = {}
+        #data['code'] = methods[method]
+        methodNames.append(method)
+        # json.dump(data, outFile)
+        # outFile.write('\n')
+        #print("Done")
+
+    #print(methods[0])
+    getJavaComments(methodNames, source_directory, methods)
+    #print("Couldn't encode data")
     
 startFromName = ''#'\\resources\outputCode\Java\HabitatGUIJava\src\sample\Main.java'
 def parseCode(root):
@@ -292,12 +284,14 @@ if __name__ == '__main__':
 
     filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\'
     language = "Java"
-
+    
     #parseSource(filename + language + "/3d-renderer/src/matrix/Matrix.java")
     #parseSource(filename + language + "/3d-renderer/src/matrix/MatrixException.java")
     #parseSource(filename + language + "/3d-renderer/src/render/Camera.java")
+    #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\parser\\ParseException.java")
+    parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\02June2018\\src\\test\\java\\SeleniumGrid\\Grid_Practice_23March_2018.java")
 
     # test = open(filename + language + "/3d-renderer/src/matrix/Matrix.java").read()
     # print(test)
     # print(re.search("^(.+)\n\(", test))
-    parseCode(filename + language)
+    #parseCode(filename + language)
