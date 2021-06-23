@@ -289,12 +289,11 @@ def extract_body_source(source, header):
             source_to_balance = source_to_balance[header_pos:start_quote_pos] + source_to_balance[pos:]
             amount_removed = amount_removed + distance
             count = pos
-
         if not moved_index: count = count + 1
         #print("Count:", count)
         #print("len(source_to_balance):", len(source_to_balance))
         if(count > len(source_to_balance)): return "NO";
-    print("Finished")
+    print("Exited loop")
     #print("balanced:\n", cleaned_source[header_pos:header_pos+len(header)+1 + count])
     print("Source:", cleaned_source[header_pos:header_pos+len(header)+1 + count + amount_removed])
     return cleaned_source[header_pos:header_pos+len(header)+1 + count + amount_removed]
