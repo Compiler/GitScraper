@@ -212,6 +212,7 @@ def remove_comments(text):
 open_list = ["{"]
 close_list = ["}"]
 def is_balanced(myStr):
+    print("Sent string:###############################################\n", myStr, "\n###############################################\n")
     stack = []
     for i in myStr:
         if i in open_list:
@@ -232,8 +233,9 @@ def is_balanced(myStr):
 def extract_body_source(source, header):
     #first remove all data between strings and also remove all comments from source
     #cleaned_source = re.sub("\".*\"", "\"\"", source)#empties strings, maybe remove?
+    print("Starting source:'\n",source,"'")
     cleaned_source = remove_comments(source)
-    print("Removed comments")
+    print("Removed comment source:'\n",cleaned_source,"'")
     header_pos = cleaned_source.find(header)
     #print("Header( ", header_pos,"):", header)
     #print(cleaned_source[header_pos:header_pos+len(header)])
@@ -242,13 +244,14 @@ def extract_body_source(source, header):
     print("Started balancing method for header: ", header)
     print("Starting source:", source_to_balance)
     amount_removed = 0
+    x = 0
     while(not is_balanced(source_to_balance[header_pos:header_pos+len(header)+1 + count])):
-        print(source_to_balance[header_pos:header_pos+len(header)+1 + count])
+        print("Source so far:________\n",source_to_balance[header_pos:header_pos+len(header)+1 + count], "\n__________")
         #find opening quote
         pos = header_pos+len(header) + count
         moved_index = False
         if source_to_balance[pos: pos +1] == '\'':
-            print("Found '")
+            print("Found first tick")
             amount_moved = 0
             pos = pos + 1
             moved_index = True
@@ -261,18 +264,18 @@ def extract_body_source(source, header):
                 pos = pos + 1
                 count = count + 1
                 amount_moved = amount_moved + 1
-            print("~~Skip:'",source_to_balance[start_single_quote_pos : pos-1],"'")
-            distance = pos - start_single_quote_pos-1
+            print("~~Skipping elements inside of ticks:_________________\n",source_to_balance[start_single_quote_pos : pos-1],"\n_________________")
+            amount_removed = pos - start_single_quote_pos-1
 
-#TODO FIGURE OUT WHAT IS WRONG WITH THIS
+#TODO SKIPPING SINGLE QUOTES AND DOUBLE QUOTES FAILS
 
             print("First 1/2:",  source_to_balance[header_pos:start_single_quote_pos-1]) 
             source_to_balance = source_to_balance[header_pos:start_single_quote_pos-1] + source_to_balance[start_single_quote_pos-1 + amount_moved:]
-            print("Sent source:", source_to_balance)
-            amount_removed = amount_removed + distance
+            print("Sent source:\"", source_to_balance,"\"")
         #this section handles skipping past quotes
         if source_to_balance[pos: pos +1] == '"': #first quote wont have anything behind it
-            print("!!!!!!!!!!!!!!!! Found \"")
+            print("Found first quotation")
+            print("Source before removal:________\n",source_to_balance[header_pos:header_pos+len(header)+1 + count], "\n__________")
             pos = pos + 1
             moved_index = True
             inside_quotes = True
@@ -283,21 +286,27 @@ def extract_body_source(source, header):
                     if(source_to_balance[pos-2: pos] == "\\\\"):
                         inside_quotes = True
                 pos = pos + 1
-            pos = pos + 1
-            print("--Skip:'",source_to_balance[start_quote_pos : pos],"'")
-            distance = pos - start_quote_pos
-            source_to_balance = source_to_balance[header_pos:start_quote_pos] + source_to_balance[pos:]
-            amount_removed = amount_removed + distance
-            count = pos
+            end_quote_pos = pos - 1
+            print("--Skipping elements inside of quotes:_________________\n",source_to_balance[start_quote_pos : end_quote_pos],"\n_________________")
+            amount_removed = end_quote_pos - start_quote_pos
+            print("Amount removed:", amount_removed)
+            pos = pos - amount_removed
+            header_pos = header_pos - amount_removed *4
+            source_to_balance = source_to_balance[header_pos:start_quote_pos] + source_to_balance[end_quote_pos:]
+            count = count - amount_removed
+            print("Source after removal:________\n",source_to_balance[header_pos:header_pos+len(header)+1 + count], "\n__________")
+            exit()
+
         if not moved_index: count = count + 1
         #print("Count:", count)
         #print("len(source_to_balance):", len(source_to_balance))
         if(count > len(source_to_balance)): return "NO";
-    print("Exited loop")
+    print("Balanced source:\n_______________\n", source_to_balance[header_pos:header_pos+len(header)+1 + count], "\n_________________")
     #print("balanced:\n", cleaned_source[header_pos:header_pos+len(header)+1 + count])
-    print("Source:", cleaned_source[header_pos:header_pos+len(header)+1 + count + amount_removed])
-    return cleaned_source[header_pos:header_pos+len(header)+1 + count + amount_removed]
-
+    #header_pos = cleaned_source.find(header)
+    body_source = cleaned_source[header_pos:header_pos+len(header)+1 + count + amount_removed]
+    print("Source code for header '", header, "':\n____________________\n", body_source, "\n____________________")
+    return body_source
 
     #right now we have cleaned source, now we need to use a stack to get the code from header to end of method.
 
@@ -405,5 +414,17 @@ if __name__ == '__main__':
 
     #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\09-08-Projeto-Bicicleta\\src\\Bicicleta.java") #UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe1 in position 27: invalid continuation byte
     #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\1.-Java-Basics-Homeworks\\3_Java_Loops_Methods_Classes\\lib\\joda-time-2.3\\src\\main\\java\\org\\joda\\time\convert\\StringConverter.java") 
-    parseSource("TestFile.java") 
+    
+    #parseSource("TestFile.java") 
+    code = ''' 
+      x){
+        return x % 2 == 0 ? "" : "ODD";
+
+    }
+    '''
+    #print(code, "\n is balanced : ", is_balanced(code))
+    file = open("TestFile.java").read();
+    extract_body_source(file, "public void sup1(int x)")
+    #extract_body_source(file, "public void sup2()")
+
     #parseCode(filename + language)
