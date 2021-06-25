@@ -1,11 +1,13 @@
-import sys,os,string
+import sys,os,string,logging
 import re
 import json
 import ntpath
+from typing import DefaultDict
 JAVA_EXT = 'java'
 CPLUSPLUS_EXT = 'cpp'
 PYTHON_EXT = 'py'
 
+logging.basicConfig(stream=sys.stderr, level=logging.CRITICAL)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
 
 language = 'Java'
 outDir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data.json'
@@ -58,19 +60,19 @@ def check_comment(test_str):
     return set(test_str) <= allowed
 def getJavaComments(methodNames, filename, methodCode):
     classname =ntpath.basename(filename).split('.')[0]
-    print(classname)
-    print(filename)
-    print(methodNames)
+    logging.debug(classname)
+    logging.debug(filename)
+    logging.debug(methodNames)
     methodHeaders = get_method_headers(methodCode, methodNames)
     source = open(filename, encoding="utf-8").read()
     constructorHeaders = getConstructorHeaders(source, classname)
     comments = getMethodComments(source, constructorHeaders + methodHeaders)
 
-    print("Final:\n", comments)
+    logging.debug("Final:\n%s", comments)
 def get_method_headers(methodCode, methodNames):
     method_headers = []
     for method_name in methodNames:
-        print(method_name)
+        logging.debug(method_name)
         code = methodCode[method_name]
         header_pos = code.find(method_name)
         matches = re.findall("^.*"+method_name+ "[^{]*", code)
@@ -88,12 +90,12 @@ def getMethodComments(source, headers):
     if(len(end_comment_locations) == 0): return [];
     end_comment_locations = sorted(end_comment_locations)
     start_comment_positions = sorted(start_comment_positions)
-    print("End comment locations: ", end_comment_locations)
+    #logging.debug("End comment locations: ", end_comment_locations)
     count = 0
     comment_header_relations={}
     for header in headers:
         position_of_header = source.find(header)
-        print("header pos:", position_of_header)
+        logging.debug("header pos: %d", position_of_header)
         min_distance = -1
         #find minimum distance
         working_end_comment_pos = end_comment_locations[0]
@@ -104,31 +106,31 @@ def getMethodComments(source, headers):
             working_end_comment_pos = end_comment
         #validate that there is a comment above and nothing else
         data_between_header_and_comment = source[working_end_comment_pos+2:position_of_header]
-        print('\'',data_between_header_and_comment,'\'')
+        logging.debug('\'%s\'', data_between_header_and_comment)
         comment_pertains_to_header = check_comment(data_between_header_and_comment)
-        print("Comment pertains to header?", comment_pertains_to_header)
+        logging.debug("Comment pertains to header? %s", comment_pertains_to_header)
         if(comment_pertains_to_header):
             #extract the comment for header
             header_comment = extract_comment(source, header, working_end_comment_pos, start_comment_positions)
             #extract source code for header
             header_body = extract_body_source(source, header)
             comment_header_relations["code"] = {"body" : header_body, "comment" : header_comment}
-            print("Header:", header)
-            print("Body:", header_body)
+            logging.debug("Header: %s", header)
+            logging.debug("Body: %s", header_body)
             if(len(header_body) < 25 or len(header_comment) < 2): continue;
-            print("Comment:", header_comment)
+            logging.debug("Comment: %s", header_comment)
             #outFile.write("{\n")
             json.dump(comment_header_relations, outFile)
             outFile.write('\n')
             #outFile.write('\n}')
-    print("Headers:", headers)
+    logging.debug("Headers: %s", headers)
     return comment_header_relations
 
 
 
 def extract_comment(source, header, comment_end_position, start_comment_positions):
     header_position = source.find(header)
-    ##print("Start comment locations:", start_comment_positions)
+    ##logging.debug("Start comment locations:", start_comment_positions)
     min_distance = -1
     #find minimum distance
     working_start_comment_pos = start_comment_positions[0]
@@ -138,7 +140,7 @@ def extract_comment(source, header, comment_end_position, start_comment_position
         minmin_distance_pos = max(min_distance, distance)
         working_start_comment_pos = start_comment
     data_between_end_and_start = source[working_start_comment_pos:comment_end_position+2]
-    #print('Comment:\'',data_between_end_and_start,'\'')
+    #logging.debug('Comment:\'',data_between_end_and_start,'\'')
     return data_between_end_and_start
 
 
@@ -159,8 +161,8 @@ def remove_comments(text):
                 if(text[pos: pos +1] == "\'"):
                     inside_single_quotes = False
                 pos = pos + 1
-            print("Skipped:'",text[start_single_quote_pos : pos-1],"'")
-            print("1:",pos)
+            logging.debug("Skipped:'%s'", text[start_quote_pos : pos-1])
+            logging.debug("1: %d",pos)
 
         #this section handles skipping past quotes
         if text[pos: pos +1] == '\"': #first quote wont have anything behind it
@@ -175,8 +177,8 @@ def remove_comments(text):
                         inside_quotes = True
                 pos = pos + 1
             pos = pos + 1
-            print("2:",pos)
-            print("Skipped:'",text[start_quote_pos : pos],"'")
+            logging.debug("2: %d",pos)
+            logging.debug("Skipped:'%s'", text[start_quote_pos : pos])
         #now we know we aren't in a quote and can look for comments outside of quotes
         #first we will check for single line comments
         else:
@@ -186,12 +188,12 @@ def remove_comments(text):
                 moved_index = True
                 while(pos < len(text) - 2 and text[pos: pos+1] != '\n'):
                     pos = pos + 1
-                print("1: Skipping: '", text[skip_pos_start : pos], "'")
+                logging.debug("1: Skipping: '%s'", text[skip_pos_start : pos])
                 text = text[0:skip_pos_start] + text[pos:]
                 distance_removed = pos - skip_pos_start
-                #print("Distance moved: ", distance_removed)
+                #logging.debug("Distance moved: ", distance_removed)
                 pos = pos - distance_removed + 1
-                print("3:",pos)
+                logging.debug("3: %d",pos)
 
             #now we check for multiline ones
             if  text[pos: pos+2] == '/*':
@@ -200,12 +202,12 @@ def remove_comments(text):
                 moved_index = True
                 while(pos < len(text) - 2 and text[pos: pos+2] != '*/'):
                     pos = pos + 1
-                print("2: Skipping: '", text[skip_pos_start : pos], "'")
+                logging.debug("2: Skipping: '%s'", text[skip_pos_start : pos])
                 text = text[0:skip_pos_start] + text[pos+2:]
                 distance_removed = pos - skip_pos_start
-                #print("Distance moved: ", distance_removed)
+                #logging.debug("Distance moved: ", distance_removed)
                 pos = pos - distance_removed + 1
-                print("4:",pos)
+                logging.debug("4: %d",pos)
         if not moved_index: pos = pos + 1;
     return text
     #return re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',re.DOTALL | re.MULTILINE).sub(comment_replacer, text)
@@ -214,7 +216,7 @@ def remove_comments(text):
 open_list = ["{"]
 close_list = ["}"]
 def is_balanced(myStr):
-    print("Sent string:###############################################\n", myStr, "\n###############################################\n")
+    logging.debug("Sent string:----------------------------------------------------------\n%s\n----------------------------------------------------------n", myStr)
     stack = []
     for i in myStr:
         if i in open_list:
@@ -235,102 +237,96 @@ def is_balanced(myStr):
 def extract_body_source(source, header):
     #first remove all data between strings and also remove all comments from source
     #cleaned_source = re.sub("\".*\"", "\"\"", source)#empties strings, maybe remove?
-    print("Starting source:'\n",source,"'")
+    logging.debug("Starting source::____________________\n%s\n____________________",source)
     cleaned_source = remove_comments(source)
-    print("Removed comment source:'\n",cleaned_source,"'")
+    logging.debug("Removed comment source:____________________\n%s\n____________________",cleaned_source)
     header_pos = cleaned_source.find(header)
-    print("Header( ", header_pos,"):", header)
-    #print(cleaned_source[header_pos:header_pos+len(header)])
+    logging.debug("Header(%d): %s", header_pos,  header)
+    #logging.debug(cleaned_source[header_pos:header_pos+len(header)])
     count = 0
     source_to_balance = cleaned_source
-    print("Started balancing method for header: ", header)
-    print("Starting source:", source_to_balance)
+    logging.debug("Started balancing method for header: %s", header)
+    logging.debug("Starting source: %s", source_to_balance)
     amount_removed = 0
     x = 0
     while(not is_balanced(source_to_balance[header_pos:header_pos+len(header)+1 + count])):
-        print("Source so far:________\n",source_to_balance[header_pos:header_pos+len(header)+1 + count], "\n__________")
+        logging.debug("Source so far:________\n%s\n__________", source_to_balance[header_pos:header_pos+len(header)+1 + count])
         #find opening quote
         pos = header_pos+len(header) + count
         moved_index = False
         if source_to_balance[pos: pos +1] == "'": #first quote wont have anything behind it
-            print("Found first tick")
-            print("Source before removal:________\n",source_to_balance[header_pos:header_pos+len(header)+1 + count], "\n__________")
+            logging.debug("Found first tick")
+            logging.debug("Source before removal:________\n%s\n__________", source_to_balance[header_pos:header_pos+len(header)+1 + count])
             starting_len = len(source_to_balance)
             pos = pos + 1
             moved_index = True
             inside_quotes = True
             start_quote_pos = pos
-            print("Going inside quotes")
-            c = 0
+            logging.debug("Going inside quotes")
             while(inside_quotes):
-                if(c > 10): exit();
-                c = c + 1;
-                print("'-Char:",source_to_balance[pos: pos +1])
+                logging.debug("'-Char: %s",source_to_balance[pos: pos +1])
                 if(source_to_balance[pos: pos +1] == "'"):
                     inside_quotes = False
                     if(source_to_balance[pos-1: pos] == "\\"): inside_quotes = True;
                     if(source_to_balance[pos-2: pos-1] == "\\"): inside_quotes = False;
                 pos = pos + 1
             end_quote_pos = pos - 1
-            print("--Skipping elements inside of quotes:_________________\n",source_to_balance[start_quote_pos : end_quote_pos],"\n_________________")
+            logging.debug("--Skipping elements inside of quotes:_________________\n%s\n_________________", source_to_balance[start_quote_pos : end_quote_pos])
             amount_removed = end_quote_pos - start_quote_pos
-            print("Amount removed:", amount_removed)
+            logging.debug("Amount removed: %d", amount_removed)
             #pos = pos - amount_removed + 1
             #header_pos = header_pos - amount_removed 
             source_to_balance = source_to_balance[:start_quote_pos] + source_to_balance[end_quote_pos:]
             count = count + 2 
             pos = pos + 1
-            print("Source after removal:\n________\n",source_to_balance[header_pos : header_pos+len(header) + count], "\n__________")
+            logging.debug("Source after removal:\n________\n%s\n__________", source_to_balance[header_pos : header_pos+len(header) + count])
             ending_len = len(source_to_balance)
-            print("starting len:", starting_len, "\nending len:", ending_len)
+            logging.debug("starting len: %d\nending len: %d", starting_len, ending_len)
 
 #TODO SKIPPING SINGLE QUOTES AND DOUBLE QUOTES FAILS
 
         #this section handles skipping past quotes
         if source_to_balance[pos: pos +1] == '"': #first quote wont have anything behind it
-            print("Found first quotation")
-            print("Source before removal:________\n",source_to_balance[header_pos:header_pos+len(header)+1 + count], "\n__________")
+            logging.debug("Found first quotation")
+            logging.debug("Source before removal:________\n%s\n__________", source_to_balance[header_pos:header_pos+len(header)+1 + count])
             starting_len = len(source_to_balance)
             pos = pos + 1
             moved_index = True
             inside_quotes = True
             start_quote_pos = pos
-            c = 0
             while(inside_quotes):
-                if(c > 10): exit();
-                print("\"-Char:",source_to_balance[pos: pos +1])
-                c = c + 1;
+                logging.debug("\"-Char: %s",source_to_balance[pos: pos +1])
                 if(source_to_balance[pos: pos +1] == "\""):
-                    print("Maybe leaving?")
+                    logging.debug("Maybe leaving?")
                     inside_quotes = False
                     if(source_to_balance[pos-1: pos] == "\\"):
-                        print("no")
+                        logging.debug("no")
                         inside_quotes = True
                     if(source_to_balance[pos-2: pos] == "\\\\"):
-                        print("yes")
+                        logging.debug("yes")
                         inside_quotes = False
                 pos = pos + 1
             end_quote_pos = pos - 1
-            print("--Skipping elements inside of quotes:_________________\n",source_to_balance[start_quote_pos : end_quote_pos],"\n_________________")
+            logging.debug("--Skipping elements inside of quotes:_________________\n%s\n_________________", source_to_balance[start_quote_pos : end_quote_pos])
             amount_removed = end_quote_pos - start_quote_pos
-            print("Amount removed:", amount_removed)
+            logging.debug("Amount removed: %d", amount_removed)
             #pos = pos - amount_removed + 1
             #header_pos = header_pos - amount_removed 
             source_to_balance = source_to_balance[:start_quote_pos] + source_to_balance[end_quote_pos:]
             count = count + 2 
             pos = pos + 1
-            print("Source after removal:\n________\n",source_to_balance[header_pos : header_pos+len(header) + count], "\n__________")
+            logging.debug("Source after removal:\n________\n%s\n__________", source_to_balance[header_pos : header_pos+len(header) + count])
             ending_len = len(source_to_balance)
-            print("starting len:", starting_len, "\nending len:", ending_len)
+            logging.debug("starting len: %d\nending len: %d", starting_len, ending_len)
         if not moved_index: count = count + 1
-        #print("Count:", count)
-        #print("len(source_to_balance):", len(source_to_balance))
+        #logging.debug("Count:", count)
+        #logging.debug("len(source_to_balance):", len(source_to_balance))
         if(count > len(source_to_balance)): return "NO";
-    print("Balanced source:\n_______________\n", source_to_balance[header_pos:header_pos+len(header)+1 + count], "\n_________________")
-    #print("balanced:\n", cleaned_source[header_pos:header_pos+len(header)+1 + count])
+    logging.debug("Balanced source:\n____________________\n%s\n____________________", source_to_balance[header_pos:header_pos+len(header)+1 + count])
+    #logging.debug("balanced:\n", cleaned_source[header_pos:header_pos+len(header)+1 + count])
     #header_pos = cleaned_source.find(header)
     body_source = source_to_balance[header_pos:header_pos+len(header)+1 + count]
-    print("Source code for header '", header, "':\n____________________\n", body_source, "\n____________________")
+    logging.debug("Source code for header '%s':\n____________________\n%s\n____________________", header, body_source)
     return body_source
 
     #right now we have cleaned source, now we need to use a stack to get the code from header to end of method.
@@ -341,7 +337,7 @@ def getConstructorHeaders(source, classname):
     while(source.find("public " + classname) != -1):
         posOfConstructor = source.find("public " + classname)
         posOfNewLine = source.find("\n", posOfConstructor)
-        #print(source[posOfConstructor:posOfNewLine - 1])
+        #logging.debug(source[posOfConstructor:posOfNewLine - 1])
         headers.append(source[posOfConstructor:posOfNewLine - 1])
         source = source[posOfNewLine:]
     
@@ -357,7 +353,7 @@ def parseSource(source_directory):
         name_out_file.write(source_directory + "\n")
 
     except:
-        print("Failed to read data")
+        logging.debug("Failed to read data")
         return
     search = re.findall("/\*", data)
     # if(len(search) == 0):
@@ -371,25 +367,25 @@ def parseSource(source_directory):
             start, end = __get_start_end_for_node(node, data, tree)
             methods[node.name] = __get_string(start, end, data, tree)     
     except:
-        print("Error, couldn't parse javalang")
+        logging.debug("Error, couldn't parse javalang")
         return
 
-    #print(methods)
+    #logging.debug(methods)
     methodNames = []
     for method in methods:
-        #print(methods[method])
+        #logging.debug(methods[method])
         #data = {}
         #data['code'] = methods[method]
         methodNames.append(method)
         # json.dump(data, outFile)
         # outFile.write('\n')
-        #print("Done")
+        #logging.debug("Done")
 
     getJavaComments(methodNames, source_directory, methods)
     
 startFromName = ''#'\\resources\outputCode\Java\HabitatGUIJava\src\sample\Main.java'
 def parseCode(root):
-    print("Beginning")
+    logging.debug("Beginning")
     extension = ''
     if(language == 'Java'):
         extension = JAVA_EXT
@@ -398,24 +394,24 @@ def parseCode(root):
     elif(language == "Python"):
         extension = PYTHON_EXT
     else:
-        print("Default language -- Testing")
+        logging.debug("Default language -- Testing")
         extension = JAVA_EXT
     if(startFromName == ''):
-        print("Starting from scratch...")
+        logging.debug("Starting from scratch...")
         for path, subdirs, files in os.walk(root):
             for name in files:
                 if(name[-len(extension):] == extension):
-                    print(os.path.join(path, name))
+                    logging.debug(os.path.join(path, name))
                     parseSource(os.path.join(path, name))
     else:
-        print("Resuming...")
+        logging.debug("Resuming...")
         for path, subdirs, files in os.walk(root):
             for name in files:
                 if(name[-len(extension):] == extension):
                     if(name != startFromName):
-                        print("Skipped",os.path.join(path, name))
+                        logging.debug("Skipped %s",os.path.join(path, name))
                         continue
-                    print(os.path.join(path, name))
+                    logging.debug(os.path.join(path, name))
                     parseSource(os.path.join(path, name))
 
 
@@ -434,12 +430,12 @@ if __name__ == '__main__':
     #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\parser\\ParseException.java")
     #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\juci\\LispWriter.java")
     #test_file = open("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\02June2018\\src\\test\\java\\SeleniumGrid\\Grid_Practice_23March_2018.java")
-    #print(remove_comments(test_file.read()))
-    #print(remove_comments("/*hello*/\ncap.setBrowserName(\"chrome //this is cool\");"))
+    #logging.debug(remove_comments(test_file.read()))
+    #logging.debug(remove_comments("/*hello*/\ncap.setBrowserName(\"chrome //this is cool\");"))
     #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\02June2018\\src\\test\\java\\SeleniumGrid\\Grid_Practice_23March_2018.java")
     # test = open(filename + language + "/3d-renderer/src/matrix/Matrix.java").read()
-    # print(test)
-    # print(re.search("^(.+)\n\(", test))
+    # logging.debug(test)
+    # logging.debug(re.search("^(.+)\n\(", test))
 
     #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\09-08-Projeto-Bicicleta\\src\\Bicicleta.java") #UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe1 in position 27: invalid continuation byte
     #parseSource("D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\1.-Java-Basics-Homeworks\\3_Java_Loops_Methods_Classes\\lib\\joda-time-2.3\\src\\main\\java\\org\\joda\\time\convert\\StringConverter.java") 
@@ -448,9 +444,8 @@ if __name__ == '__main__':
     #code = open(filename).read();
     #extract_body_source(code, "protected String add_escapes(String str)")
 
-    #print(code, "\n is balanced : ", is_balanced(code))
+    #logging.debug(code, "\n is balanced : ", is_balanced(code))
     #file = open("TestFile.java").read();
     #extract_body_source(file, "public void sup1(int x)")
     #extract_body_source(file, "public void sup2()")
-
     parseCode(filename + language)
