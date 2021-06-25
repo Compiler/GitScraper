@@ -7,9 +7,9 @@ JAVA_EXT = 'java'
 CPLUSPLUS_EXT = 'cpp'
 PYTHON_EXT = 'py'
 
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', stream=sys.stderr, level=logging.CRITICAL)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', stream=sys.stderr, level=logging.ERROR)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
 #logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', stream=sys.stderr, level=logging.NOTSET)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
-_dbg_max_count = 150
+_dbg_max_count = 500000
 language = 'Java'
 outDir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data.json'
 nameDir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data_names.txt'
@@ -429,9 +429,11 @@ def parseSource(source_directory):
         # outFile.write('\n')
         #logging.debug("Done")
 
-    getJavaComments(methodNames, source_directory, methods)
+    try:
+        getJavaComments(methodNames, source_directory, methods)
+    except:
+        logging.error("Skipping");
     
-startFromName = ''#'\\resources\outputCode\Java\HabitatGUIJava\src\sample\Main.java'
 def parseCode(root):
     logging.critical("Beginning")
     extension = ''
@@ -444,6 +446,16 @@ def parseCode(root):
     else:
         logging.critical("Default language -- Testing")
         extension = JAVA_EXT
+
+
+    startFromName = ''
+    with open('D:\\Projects\\gitscraper\\resources\\ResultingJSON\\' + language + '\\comment_code_data_names.txt', 'rb') as f:
+        f.seek(-2, os.SEEK_END)
+        while f.read(1) != b'\n':
+            f.seek(-2, os.SEEK_CUR)
+        startFromName = f.readline().decode()
+        startFromName = ' '.join(startFromName.split());
+    logging.critical("resuming from: '%s'", startFromName);
     if(startFromName == ''):
         logging.critical("Starting from scratch...")
         for path, subdirs, files in os.walk(root):
@@ -453,14 +465,17 @@ def parseCode(root):
                     parseSource(os.path.join(path, name))
     else:
         logging.critical("Resuming...")
+        found_name = False;
         for path, subdirs, files in os.walk(root):
             for name in files:
                 if(name[-len(extension):] == extension):
-                    if(name != startFromName):
+                    if((not found_name) and os.path.join(path, name) != startFromName):
                         logging.error("Skipped %s",os.path.join(path, name))
                         continue
-                    logging.critical(os.path.join(path, name))
-                    parseSource(os.path.join(path, name))
+                    else:
+                        found_name = True
+                        logging.critical(os.path.join(path, name))
+                        parseSource(os.path.join(path, name))
 
 
 if __name__ == '__main__':
@@ -471,8 +486,11 @@ if __name__ == '__main__':
     #filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\parser\\TokenMgrError.java'
     #filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\-f19_cpsc24500_PATEL_NEEL\\HealthInsurance\\src\\PatelInsurance.java'
     #filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\2apl--old-\\2apl\\src\\envJavaSpace\\APAPLTermConverter.java'
+    #filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\2019\\SkystoneNav.java'
+    filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\actuarial_formulas_calculator\\Formules_Actuariat\\src\\commons-collections-3.2.2-src\\src\\test\\org\\apache\\commons\\collections\\collection\\AbstractTestCollection.java'
     
-    #parseSource(filename)
+    #print(filename);
+    #parseSource(filename); exit();
     filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\'
     language = "Java"
     #inf loop: 
