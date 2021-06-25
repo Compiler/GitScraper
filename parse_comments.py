@@ -7,7 +7,8 @@ JAVA_EXT = 'java'
 CPLUSPLUS_EXT = 'cpp'
 PYTHON_EXT = 'py'
 
-logging.basicConfig(stream=sys.stderr, level=logging.CRITICAL)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', stream=sys.stderr, level=logging.CRITICAL)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
+#logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', stream=sys.stderr, level=logging.ERROR)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
 
 language = 'Java'
 outDir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data.json'
@@ -161,7 +162,7 @@ def remove_comments(text):
                 if(text[pos: pos +1] == "\'"):
                     inside_single_quotes = False
                 pos = pos + 1
-            logging.debug("Skipped:'%s'", text[start_quote_pos : pos-1])
+            logging.debug("Skipped:'%s'", text[start_single_quote_pos : pos-1])
             logging.debug("1: %d",pos)
 
         #this section handles skipping past quotes
@@ -263,7 +264,10 @@ def extract_body_source(source, header):
             inside_quotes = True
             start_quote_pos = pos
             logging.debug("Going inside quotes")
+            _dbg_count = 0
             while(inside_quotes):
+                if(_dbg_count > 50): logging.critical("Infinite loop found"); exit();
+                _dbg_count = _dbg_count + 1
                 logging.debug("'-Char: %s",source_to_balance[pos: pos +1])
                 if(source_to_balance[pos: pos +1] == "'"):
                     inside_quotes = False
@@ -294,17 +298,37 @@ def extract_body_source(source, header):
             moved_index = True
             inside_quotes = True
             start_quote_pos = pos
-            while(inside_quotes):
+
+            _dbg_count = 0
+            while(inside_quotes): #we are inside a quote
+                if(_dbg_count > 50): logging.critical("Infinite loop found"); exit();
+                _dbg_count = _dbg_count + 1
                 logging.debug("\"-Char: %s",source_to_balance[pos: pos +1])
-                if(source_to_balance[pos: pos +1] == "\""):
+                if(source_to_balance[pos] == "\""): #found a potential ending quote
                     logging.debug("Maybe leaving?")
                     inside_quotes = False
-                    if(source_to_balance[pos-1: pos] == "\\"):
-                        logging.debug("no")
-                        inside_quotes = True
-                    if(source_to_balance[pos-2: pos] == "\\\\"):
-                        logging.debug("yes")
-                        inside_quotes = False
+                    if(source_to_balance[pos-1] == "\\"):
+                        logging.debug("Found \\ character")
+                        escape_count = 0
+                        esc_pos = pos - 1
+
+                        while(source_to_balance[esc_pos] == '\\'):
+                            escape_count = escape_count + 1
+                            esc_pos = esc_pos - 1
+                        if(escape_count % 2 == 0): inside_quotes = False;
+                        else: inside_quotes = True;
+
+
+
+                        # logging.debug("no")
+                        # inside_quotes = True
+                        # if(source_to_balance[pos-2] == "\\"):
+                        #     logging.debug("yes")
+                        #     inside_quotes = False
+                        #     if(source_to_balance[pos-3] == "\\"):
+                        #         logging.debug("no2")
+                        #         inside_quotes = True
+   
                 pos = pos + 1
             end_quote_pos = pos - 1
             logging.debug("--Skipping elements inside of quotes:_________________\n%s\n_________________", source_to_balance[start_quote_pos : end_quote_pos])
@@ -385,7 +409,7 @@ def parseSource(source_directory):
     
 startFromName = ''#'\\resources\outputCode\Java\HabitatGUIJava\src\sample\Main.java'
 def parseCode(root):
-    logging.debug("Beginning")
+    logging.critical("Beginning")
     extension = ''
     if(language == 'Java'):
         extension = JAVA_EXT
@@ -394,24 +418,24 @@ def parseCode(root):
     elif(language == "Python"):
         extension = PYTHON_EXT
     else:
-        logging.debug("Default language -- Testing")
+        logging.critical("Default language -- Testing")
         extension = JAVA_EXT
     if(startFromName == ''):
-        logging.debug("Starting from scratch...")
+        logging.critical("Starting from scratch...")
         for path, subdirs, files in os.walk(root):
             for name in files:
                 if(name[-len(extension):] == extension):
-                    logging.debug(os.path.join(path, name))
+                    logging.critical(os.path.join(path, name))
                     parseSource(os.path.join(path, name))
     else:
-        logging.debug("Resuming...")
+        logging.critical("Resuming...")
         for path, subdirs, files in os.walk(root):
             for name in files:
                 if(name[-len(extension):] == extension):
                     if(name != startFromName):
-                        logging.debug("Skipped %s",os.path.join(path, name))
+                        logging.error("Skipped %s",os.path.join(path, name))
                         continue
-                    logging.debug(os.path.join(path, name))
+                    logging.critical(os.path.join(path, name))
                     parseSource(os.path.join(path, name))
 
 
@@ -420,6 +444,8 @@ if __name__ == '__main__':
     #language = "TestLang"
 
     #filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\parser\\ParseException.java'
+    #filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\parser\\TokenMgrError.java'
+    
     filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\'
     language = "Java"
     #parseSource(filename)
@@ -448,4 +474,5 @@ if __name__ == '__main__':
     #file = open("TestFile.java").read();
     #extract_body_source(file, "public void sup1(int x)")
     #extract_body_source(file, "public void sup2()")
+    #print('''D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\parser\\TokenMgrError.java'''); 
     parseCode(filename + language)
