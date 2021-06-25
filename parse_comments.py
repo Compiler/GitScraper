@@ -8,8 +8,8 @@ CPLUSPLUS_EXT = 'cpp'
 PYTHON_EXT = 'py'
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', stream=sys.stderr, level=logging.CRITICAL)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
-#logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', stream=sys.stderr, level=logging.ERROR)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
-
+#logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', stream=sys.stderr, level=logging.NOTSET)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
+_dbg_max_count = 150
 language = 'Java'
 outDir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data.json'
 nameDir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data_names.txt'
@@ -146,38 +146,62 @@ def extract_comment(source, header, comment_end_position, start_comment_position
 
 
 
-#TODO: rewrite this 
+#TODO: FIX WHEN WE ARE INSIDE OF A STRING #############################################################################
 def remove_comments(text):
     pos = 0
     while(pos < len(text) - 2):
         moved_index = False
+        logging.debug("Scanning for comments:\n_____________________________\n%s\n___________________________\n", text[:pos])
+        logging.debug("Position: %d", pos)
         #this section handles skipping past single-quotes
-        if text[pos: pos +1] == '\'':
-            pos = pos + 1
-            moved_index = True
-
-            inside_single_quotes = True
-            start_single_quote_pos = pos
-            while(inside_single_quotes and len(text) - 2 > pos):
-                if(text[pos: pos +1] == "\'"):
-                    inside_single_quotes = False
-                pos = pos + 1
-            logging.debug("Skipped:'%s'", text[start_single_quote_pos : pos-1])
-            logging.debug("1: %d",pos)
-
-        #this section handles skipping past quotes
-        if text[pos: pos +1] == '\"': #first quote wont have anything behind it
+        if text[pos] == "'": #first quote wont have anything behind it
+            logging.debug("Inside tick")
+            starting_len = len(text)
             pos = pos + 1
             moved_index = True
             inside_quotes = True
             start_quote_pos = pos
-            while(inside_quotes and len(text) - 2 > pos):
-                if(text[pos: pos +1] == "\""):
+            logging.debug("Going inside quotes")
+            _dbg_count = 0
+            while(inside_quotes):
+                if(_dbg_count > _dbg_max_count): logging.critical("Infinite loop found"); exit();
+                _dbg_count = _dbg_count + 1
+                logging.debug("'-Char: %s",text[pos: pos +1])
+                if(text[pos: pos +1] == "'"):
                     inside_quotes = False
-                    if(text[pos-2: pos] == "\\\\"):
-                        inside_quotes = True
+                    if(text[pos-1: pos] == "\\"): inside_quotes = True;
+                    if(text[pos-2: pos-1] == "\\"): inside_quotes = False;
                 pos = pos + 1
+            end_quote_pos = pos - 1
+            logging.debug("Skipped:'%s'", text[start_quote_pos : pos-1])
+            logging.debug("1: %d",pos)
+
+        #this section handles skipping past quotes
+        if text[pos] == '\"': #first quote wont have anything behind it
+            logging.debug("Inside quote")
             pos = pos + 1
+            moved_index = True
+            inside_quotes = True
+            start_quote_pos = pos
+            _dbg_count = 0
+            while(inside_quotes): #we are inside a quote
+                if(_dbg_count > _dbg_max_count): logging.critical("Infinite loop found"); exit();
+                _dbg_count = _dbg_count + 1
+                logging.debug("\"-Char: %s",text[pos: pos +1])
+                if(text[pos] == "\""): #found a potential ending quote
+                    logging.debug("Maybe leaving?")
+                    inside_quotes = False
+                    if(text[pos-1] == "\\"):
+                        logging.debug("Found \\ character IN COMMENTS")
+                        escape_count = 0
+                        esc_pos = pos - 1
+
+                        while(text[esc_pos] == '\\'):
+                            escape_count = escape_count + 1
+                            esc_pos = esc_pos - 1
+                        if(escape_count % 2 == 0): inside_quotes = False;
+                        else: inside_quotes = True;
+                pos = pos + 1
             logging.debug("2: %d",pos)
             logging.debug("Skipped:'%s'", text[start_quote_pos : pos])
         #now we know we aren't in a quote and can look for comments outside of quotes
@@ -266,7 +290,7 @@ def extract_body_source(source, header):
             logging.debug("Going inside quotes")
             _dbg_count = 0
             while(inside_quotes):
-                if(_dbg_count > 50): logging.critical("Infinite loop found"); exit();
+                if(_dbg_count > _dbg_max_count): logging.critical("Infinite loop found"); exit();
                 _dbg_count = _dbg_count + 1
                 logging.debug("'-Char: %s",source_to_balance[pos: pos +1])
                 if(source_to_balance[pos: pos +1] == "'"):
@@ -301,7 +325,7 @@ def extract_body_source(source, header):
 
             _dbg_count = 0
             while(inside_quotes): #we are inside a quote
-                if(_dbg_count > 50): logging.critical("Infinite loop found"); exit();
+                if(_dbg_count > _dbg_max_count): logging.critical("Infinite loop found"); exit();
                 _dbg_count = _dbg_count + 1
                 logging.debug("\"-Char: %s",source_to_balance[pos: pos +1])
                 if(source_to_balance[pos] == "\""): #found a potential ending quote
@@ -445,10 +469,13 @@ if __name__ == '__main__':
 
     #filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\parser\\ParseException.java'
     #filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\parser\\TokenMgrError.java'
+    #filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\-f19_cpsc24500_PATEL_NEEL\\HealthInsurance\\src\\PatelInsurance.java'
+    #filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\2apl--old-\\2apl\\src\\envJavaSpace\\APAPLTermConverter.java'
     
+    #parseSource(filename)
     filename = 'D:\\Projects\\gitscraper\\resources\\outputCode\\'
     language = "Java"
-    #parseSource(filename)
+    #inf loop: 
     
     #parseSource(filename + language + "/3d-renderer/src/matrix/Matrix.java")
     #parseSource(filename + language + "/3d-renderer/src/matrix/MatrixException.java")
@@ -475,4 +502,5 @@ if __name__ == '__main__':
     #extract_body_source(file, "public void sup1(int x)")
     #extract_body_source(file, "public void sup2()")
     #print('''D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\parser\\TokenMgrError.java'''); 
+    
     parseCode(filename + language)
