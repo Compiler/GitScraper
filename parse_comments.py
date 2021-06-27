@@ -433,9 +433,8 @@ def parseSource(source_directory):
         getJavaComments(methodNames, source_directory, methods)
     except:
         logging.error("Skipping");
-    
-def parseCode(root):
-    logging.critical("Beginning")
+
+def getExtension():
     extension = ''
     if(language == 'Java'):
         extension = JAVA_EXT
@@ -446,6 +445,10 @@ def parseCode(root):
     else:
         logging.critical("Default language -- Testing")
         extension = JAVA_EXT
+    return extension
+def parseCode(root):
+    logging.critical("Beginning")
+    extension = getExtension()
 
 
     startFromName = ''
@@ -476,7 +479,6 @@ def parseCode(root):
                         found_name = True
                         logging.critical(os.path.join(path, name))
                         parseSource(os.path.join(path, name))
-
 
 if __name__ == '__main__':
     #filename = 'resources/outputCode/'
