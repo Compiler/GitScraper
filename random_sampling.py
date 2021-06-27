@@ -15,9 +15,10 @@ def get_subdir_count(root):
 def parse_files(path, files, extension):
     for name in files:
         if(name[-len(extension):] == extension):
-            logging.critical("File used: '%s'", os.path.join(path, name))
-            return 1
-    return 0
+            filename = os.path.join(path, name)
+            logging.critical("File used: '%s'", filename)
+            return [1, filename]
+    return [0, -1]
 
 def grab_random_samples(root, count):
     selections = []
@@ -35,15 +36,22 @@ def grab_random_samples(root, count):
     files_read = 0
     extension = parse_comments.getExtension()
     index = 0
+    sampled_file_paths = []
     for path, subdirs, files in os.walk(root):
         if(index < count and files_read < count):
             if(walk_count < selections[index]):
                 walk_count = walk_count + 1;
                 continue;
-            bit = parse_files(path,files,extension)
+            [bit, accepted_file_name] = parse_files(path,files,extension)
+            if(bit == 1):
+                sampled_file_paths.append(accepted_file_name)
             files_read = files_read + bit
             index = index + bit
         else: break;
 
+    return sampled_file_paths
 
-grab_random_samples(code_dir, 1000);
+
+if __name__ == '__main__':
+    files = grab_random_samples(code_dir, 10)
+    print(files)

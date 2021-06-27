@@ -149,6 +149,7 @@ def extract_comment(source, header, comment_end_position, start_comment_position
 #TODO: FIX WHEN WE ARE INSIDE OF A STRING #############################################################################
 def remove_comments(text):
     pos = 0
+    skip_count = 0
     while(pos < len(text) - 2):
         moved_index = False
         logging.debug("Scanning for comments:\n_____________________________\n%s\n___________________________\n", text[:pos])
