@@ -12,18 +12,16 @@ code_dir = "D:\\Projects\\gitscraper\\resources\\outputCode\\"+language+"\\"
 def get_subdir_count(root):
     return len(next(os.walk(root))[1])
 
-def parse_files(files, extension, path):
+def parse_files(path, files, extension):
     for name in files:
         if(name[-len(extension):] == extension):
             logging.critical("File used: '%s'", os.path.join(path, name))
             return 1
-
-    logging.critical("No file in %s\t%s", path, files)
     return 0
 
 def grab_random_samples(root, count):
     selections = []
-    subdir_count = (int)((get_subdir_count(root) - 1) / 100)
+    subdir_count = (int)((get_subdir_count(root) - 1)) * 1
     if(subdir_count < count): logging.critical("Dataset too small for sample count"); return;
     logging.critical("Subdirectory count: %d", subdir_count)
     for _ in range(count):
@@ -35,18 +33,17 @@ def grab_random_samples(root, count):
     logging.critical("Extension used: .%s", extension)
     walk_count = 0
     files_read = 0
+    extension = parse_comments.getExtension()
+    index = 0
     for path, subdirs, files in os.walk(root):
-        if(len(selections) == 0 or walk_count>subdir_count): return
-        if(files_read < count):
-            logging.critical("Selection: %s\tFiles read: %d", selections[0], files_read)
-            if(walk_count < selections[0]):
+        if(index < count and files_read < count):
+            if(walk_count < selections[index]):
                 walk_count = walk_count + 1;
                 continue;
-                
-            logging.critical("Attempting: %s", path)
-            files_read = files_read + parse_files(files, extension, path)
-            selections.remove(selections[0])
+            bit = parse_files(path,files,extension)
+            files_read = files_read + bit
+            index = index + bit
+        else: break;
 
 
-
-grab_random_samples(code_dir, 5);
+grab_random_samples(code_dir, 1000);
