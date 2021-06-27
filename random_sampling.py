@@ -53,5 +53,9 @@ def grab_random_samples(root, count):
 
 
 if __name__ == '__main__':
-    files = grab_random_samples(code_dir, 10)
+    files = grab_random_samples(code_dir, 1000)
     print(files)
+    outDir = "C:\\Users\\Work\\Documents\\GitScraper\\code.json"
+    for sample in files:
+        parse_comments.parseSource(sample)
+        sample_line = open(outDir, 'r').read()

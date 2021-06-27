@@ -11,7 +11,8 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%
 #logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', stream=sys.stderr, level=logging.NOTSET)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
 _dbg_max_count = 500000
 language = 'Java'
-outDir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data.json'
+#outDir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data.json'
+outDir = "C:\\Users\\Work\\Documents\\GitScraper\\code.json"
 nameDir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data_names.txt'
 #outDir = "code.json"
 outFile = open(outDir, mode="a")
@@ -70,6 +71,7 @@ def getJavaComments(methodNames, filename, methodCode):
     comments = getMethodComments(source, constructorHeaders + methodHeaders)
 
     logging.debug("Final:\n%s", comments)
+    
 def get_method_headers(methodCode, methodNames):
     method_headers = []
     for method_name in methodNames:
@@ -221,6 +223,7 @@ def remove_comments(text):
                 pos = pos - distance_removed + 1
                 logging.debug("3: %d",pos)
 
+                skip_count = skip_count + 1
             #now we check for multiline ones
             if  text[pos: pos+2] == '/*':
                 skip_pos_start = pos;
@@ -232,9 +235,11 @@ def remove_comments(text):
                 text = text[0:skip_pos_start] + text[pos+2:]
                 distance_removed = pos - skip_pos_start
                 #logging.debug("Distance moved: ", distance_removed)
+                skip_count = skip_count + 1
                 pos = pos - distance_removed + 1
                 logging.debug("4: %d",pos)
         if not moved_index: pos = pos + 1;
+    logging.debug("Comments skipped: %d", skip_count)
     return text
     #return re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',re.DOTALL | re.MULTILINE).sub(comment_replacer, text)
 
