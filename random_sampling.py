@@ -1,4 +1,4 @@
-import parse_comments
+import parse_comments, file_utils
 import sys,os,string,logging
 from random import seed
 from random import randint
@@ -53,9 +53,18 @@ def grab_random_samples(root, count):
 
 
 if __name__ == '__main__':
-    files = grab_random_samples(code_dir, 1000)
-    print(files)
-    outDir = "C:\\Users\\Work\\Documents\\GitScraper\\code.json"
-    for sample in files:
-        parse_comments.parseSource(sample)
-        sample_line = open(outDir, 'r').read()
+    sample_path = "C:\\Users\\Work\\Documents\\GitScraper\\code.json"
+    sample_count = 1000
+    sample_runs = 50
+    sample_returns = []
+    sample_sum = 0
+    for i in range(0, 50):
+        file_utils.clear_file(sample_path);
+        for sample in grab_random_samples(code_dir, sample_count):
+            parse_comments.parseSource(sample)
+        sample_line_count = file_utils.get_line_count(sample_path)
+        sample_sum = sample_sum + sample_line_count
+        logging.critical("%d samples produced %d code:comment relations.", sample_count, sample_line_count)
+        file_utils.clear_file(sample_path);
+    logging.critical("================================\nSample sum: %d\nSample runs: %d\nSample average: %d\n======================", sample_sum, sample_runs, sample_sum / sample_runs)
+    

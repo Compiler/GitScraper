@@ -11,12 +11,13 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%
 #logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', stream=sys.stderr, level=logging.NOTSET)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
 _dbg_max_count = 500000
 language = 'Java'
-#outDir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data.json'
-outDir = "C:\\Users\\Work\\Documents\\GitScraper\\code.json"
-nameDir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data_names.txt'
-#outDir = "code.json"
-outFile = open(outDir, mode="a")
-name_out_file = open(nameDir, mode="a", encoding="utf-8")
+out_dir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data.json'
+skip_dir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\skip_dirs.txt'
+name_dir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data_names.txt'
+#out_dir = "code.json"
+out_file = open(out_dir, mode="a")
+name_out_file = open(name_dir, mode="a", encoding="utf-8")
+skip_out_file = open(skip_dir, mode="a", encoding="utf-8")
 
 import javalang as jl
 def __get_start_end_for_node(node_to_find, data, tree):
@@ -61,10 +62,7 @@ def check_comment(test_str):
     allowed = set('\t\n ')
     return set(test_str) <= allowed
 def getJavaComments(methodNames, filename, methodCode):
-    classname =ntpath.basename(filename).split('.')[0]
-    logging.debug(classname)
-    logging.debug(filename)
-    logging.debug(methodNames)
+    classname = ntpath.basename(filename).split('.')[0]
     methodHeaders = get_method_headers(methodCode, methodNames)
     source = open(filename, encoding="utf-8").read()
     constructorHeaders = getConstructorHeaders(source, classname)
@@ -82,7 +80,7 @@ def get_method_headers(methodCode, methodNames):
         method_headers = method_headers + matches
     return method_headers
 
-#returns the constructor comments given their headers and source code
+#returns the comments given their headers and source code
 def getMethodComments(source, headers):
     if(len(headers) == 0): return [];
     start_comment_positions = []
@@ -122,10 +120,10 @@ def getMethodComments(source, headers):
             logging.debug("Body: %s", header_body)
             if(len(header_body) < 25 or len(header_comment) < 2): continue;
             logging.debug("Comment: %s", header_comment)
-            #outFile.write("{\n")
-            json.dump(comment_header_relations, outFile)
-            outFile.write('\n')
-            #outFile.write('\n}')
+            #out_file.write("{\n")
+            json.dump(comment_header_relations, out_file)
+            out_file.write('\n')
+            #out_file.write('\n}')
     logging.debug("Headers: %s", headers)
     return comment_header_relations
 
@@ -391,7 +389,6 @@ def getConstructorHeaders(source, classname):
     while(source.find("public " + classname) != -1):
         posOfConstructor = source.find("public " + classname)
         posOfNewLine = source.find("\n", posOfConstructor)
-        #logging.debug(source[posOfConstructor:posOfNewLine - 1])
         headers.append(source[posOfConstructor:posOfNewLine - 1])
         source = source[posOfNewLine:]
     
@@ -410,9 +407,6 @@ def parseSource(source_directory):
         logging.debug("Failed to read data")
         return
     search = re.findall("/\*", data)
-    # if(len(search) == 0):
-    #     search = re.findall("^[^\"]*//.*$", data)
-    #     if(len(search) == 0): return
     methods = {}
     try:
         tree = jl.parse.parse(data)
@@ -424,20 +418,13 @@ def parseSource(source_directory):
         logging.debug("Error, couldn't parse javalang")
         return
 
-    #logging.debug(methods)
     methodNames = []
     for method in methods:
-        #logging.debug(methods[method])
-        #data = {}
-        #data['code'] = methods[method]
         methodNames.append(method)
-        # json.dump(data, outFile)
-        # outFile.write('\n')
-        #logging.debug("Done")
-
     try:
         getJavaComments(methodNames, source_directory, methods)
     except:
+        skip_out_file.write(source_directory)
         logging.error("Skipping");
 
 def getExtension():

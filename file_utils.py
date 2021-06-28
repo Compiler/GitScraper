@@ -11,6 +11,4 @@ def get_line_count(file_name):
     return line_count
 
 def clear_file(file_name):
-    file = open(file_name,"r+")
-    file.truncate(0)
-    file.close()
+    open(file_name, 'w').close()

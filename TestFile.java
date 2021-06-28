@@ -7,22 +7,21 @@
  */
 class ClassLuke{
     /*this the 1st method*/
-    public void sup1(int x){
+    public void test_method1(int x){
         return x % 2 == 0 ? "EVEN" : "ODD";
-
     }
 
     /*this the 2nd method*/
-    public void sup2(){
-        char messup = '}';
-        String thing = "{{{{}}}}}}}}";
+    public void corner_case_test2(){
+        char mestest_method = '}';
+        String thing = "{{{{}}}}}}}}/**tricky corner case**/ //another one:)";
+        String corner = "\\\\\\\\\\\'\\\'\\\\\\\\\\\'"
 
     }
 
     /*this the 3rd method*/
-    public void sup3(){
+    public void test_method3(){
         System.out.println("Hello, world!!");
-
     }
 }
 
