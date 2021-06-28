@@ -1,8 +1,6 @@
-import sys,os,string,logging
-import re
-import json
-import ntpath
+import sys,os,string,logging,re,json,ntpath
 from typing import DefaultDict
+import dev_utils
 JAVA_EXT = 'java'
 CPLUSPLUS_EXT = 'cpp'
 PYTHON_EXT = 'py'
@@ -421,8 +419,10 @@ def parseSource(source_directory):
     methodNames = []
     for method in methods:
         methodNames.append(method)
+
+    timed_func = dev_utils.timeout(timeout=120)(getJavaComments)
     try:
-        getJavaComments(methodNames, source_directory, methods)
+        timed_func(methodNames, source_directory, methods)
     except:
         skip_out_file.write(source_directory)
         logging.error("Skipping");
@@ -473,6 +473,12 @@ def parseCode(root):
                         logging.critical(os.path.join(path, name))
                         parseSource(os.path.join(path, name))
 
+
+
+def test():
+    while(True):
+        logging.critical(".")
+
 if __name__ == '__main__':
     #filename = 'resources/outputCode/'
     #language = "TestLang"
@@ -516,4 +522,7 @@ if __name__ == '__main__':
     #extract_body_source(file, "public void sup2()")
     #print('''D:\\Projects\\gitscraper\\resources\\outputCode\\Java\\.emacs.d\\lib\\jdee-server\\src\\main\\java\\jde\\parser\\TokenMgrError.java'''); 
     
+
+
     parseCode(filename + language)
+
