@@ -9,7 +9,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%
 #logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', stream=sys.stderr, level=logging.NOTSET)### CRITICAL ERROR WARNING INFO DEBUG NOTSET
 _dbg_max_count = 500000
 language = 'Java'
-out_dir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data.json'
+out_dir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data_pooled.json'
 skip_dir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\skip_dirs.txt'
 name_dir = "D:\\Projects\\gitscraper\\resources\\ResultingJSON\\"+language+'\\comment_code_data_names.txt'
 #out_dir = "code.json"
