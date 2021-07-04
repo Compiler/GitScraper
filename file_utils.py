@@ -6,7 +6,7 @@ def _blocks(files, size=65536):
         yield b
 
 def get_line_count(file_name):
-    with open(file_name, "r") as f:
+    with open(file_name, "r", encoding="utf-8" ) as f:
         line_count = sum(bl.count("\n") for bl in _blocks(f))
     return line_count
 
