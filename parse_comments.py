@@ -456,7 +456,7 @@ def parseCode(root):
         logging.critical("Starting from scratch...")
         for path, subdirs, files in os.walk(root):
             for name in files:
-                if(name[-len(extension):] == extension):
+                if(name[-len(extension):] == extension and "HiveMeta" not in name):
                     logging.critical(os.path.join(path, name))
                     parseSource(os.path.join(path, name))
     else:
@@ -464,7 +464,7 @@ def parseCode(root):
         found_name = False;
         for path, subdirs, files in os.walk(root):
             for name in files:
-                if(name[-len(extension):] == extension):
+                if(name[-len(extension):] == extension and "HiveMeta" not in name):
                     if((not found_name) and os.path.join(path, name) != startFromName):
                         logging.error("Skipped %s",os.path.join(path, name))
                         continue
