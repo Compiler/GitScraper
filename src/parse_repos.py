@@ -14,7 +14,7 @@ import traceback
 from lxml.html import fromstring
 import sys, getopt
 from random import randrange
-filename = "ScrapedRepos/combinedRepos.txt"
+filename = "D:\\Projects\\gitscraper\\ScrapedRepos\\GithubRepositories5.txt"
 f = open(filename, "a", encoding='utf-8')
 
 
@@ -29,6 +29,7 @@ def parseContent(htmlData):
         lang = eachRepo.span
         if(lang != None):
             repos[lang.text.split()[0]] =  href
+            print("Writing")
             f.write('\"'+lang.text.split()[0]+'\":\"' + href+'\"\n')
     allForks = domStruct.select('li.col-12.d-flex.width-full.py-4.border-bottom.color-border-secondary.public.fork .f6.text-gray.mt-2')
     for eachFork in allForks:
@@ -38,6 +39,7 @@ def parseContent(htmlData):
         lang = eachFork.span
         if(lang != None):
             repos[lang.text.split()[0]] =  href
+            print("Writing")
             f.write('\"'+lang.text.split()[0]+'\":\"' + href+'\"\n')
 
     buttons = domStruct.select('#user-repositories-list > div > div')
@@ -79,6 +81,7 @@ def scrapeRepos(startURL):
                 print("Reattempting connection!")
                 return scrapeRepos(startURL)
             return -1
+        print("\t\tParsing Content")
         code = parseContent(res.content)
         while(code[0] == 1):
             print('Next\tNew url:',code[1])
@@ -122,11 +125,13 @@ def test_driver():
     
 def file_driver():
     userfileName = 'ScrapedUsers/CombinedUsers.txt'
-    with open(userfileName, 'r') as theFile:
-        lines = theFile.readlines()
-    for name in lines:
-        print(name.split('/')[-1])
-        scrapeRepos(name.split('/')[1])
+    files = ['D:\\Projects\\gitscraper\\ScrapedUsers\\GithubUsernames5.txt', 'D:\\Projects\\gitscraper\\ScrapedUsers\\GithubUsernames5_5.txt']
+    for file in files:
+        with open(file, 'r') as theFile:
+            lines = theFile.readlines()
+        for name in lines:
+            print(name.split('/')[-1])
+            scrapeRepos(name.split('/')[1])
 
 if __name__ == '__main__':
     #test_driver();
