@@ -2,7 +2,7 @@ import os, re
 
 if __name__=='__main__':
     filename = 'D:\\Projects\\gitscraper\\ScrapedRepos\\GithubRepositoriesExtended1234.txt'
-    dir_to_setup = 'D:\\Projects\\gitscraper\\resources\\outputCode'
+    dir_to_setup = 'D:\\Projects\\gitscraper\\resources\\Tester_Setup'
     repos = open(filename, 'r', encoding='utf-8')
     matches = {}    
     for line in repos:
