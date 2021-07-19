@@ -12,3 +12,9 @@ def get_line_count(file_name):
 
 def clear_file(file_name):
     open(file_name, 'w').close()
+
+def add_newline_if_missing(filename):
+    with open(filename, 'r+', encoding='utf-8') as input_file:
+        if(input_file.read()[-1] != '\n'):
+            input_file.write("\n")
+            input_file.close()

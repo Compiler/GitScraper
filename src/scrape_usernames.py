@@ -27,58 +27,51 @@ def get_proxies():
     return prox
 
 
-class ReqInstance:
+
+
+class Requester_Instance:
     def __init__(self):
         self.proxies = set();
         self.proxyPool = cycle({'81.12.119.189'})
         self.counter = 0
-        self.getProxies()
     
-    def getProxies(self):
-        url = 'https://free-proxy-list.net/'
-        response = requests.get(url)
-        parser = fromstring(response.text)
-        self.proxies = set()
-        self.proxyPool
-        for i in parser.xpath('//tbody/tr')[:10]:
-            if i.xpath('.//td[7][contains(text(),"yes")]'):
-                #Grabbing IP and corresponding PORT
-                proxy = ":".join([i.xpath('.//td[1]/text()')[0], i.xpath('.//td[2]/text()')[0]])
-                self.proxies.add(proxy)
-        self.proxyPool = cycle(self.proxies);
+    # def getProxies(self):
+    #     #url = 'https://free-proxy-list.net/'
+    #     response = requests.get(url)
+    #     parser = fromstring(response.text)
+    #     self.proxies = set()
+    #     self.proxyPool
+    #     for i in parser.xpath('//tbody/tr')[:10]:
+    #         if i.xpath('.//td[7][contains(text(),"yes")]'):
+    #             #Grabbing IP and corresponding PORT
+    #             proxy = ":".join([i.xpath('.//td[1]/text()')[0], i.xpath('.//td[2]/text()')[0]])
+    #             self.proxies.add(proxy)
+    #     self.proxyPool = cycle(self.proxies);
                 
 
 
-    def validateUser(self, startURL):
+    def validateUser(self, git_username):
         try:
-            proxy = next(self.proxyPool)
-            print('proxy:',proxy)
-            res = requests.get('http://github.com/'+str(startURL), headers= {'User-Agent' : "Mozilla/5.0"}, proxies={"http": proxy, "https": proxy})
+            res = requests.get('http://github.com/'+str(git_username), headers= {'User-Agent' : "Mozilla/5.0"})
             if(res.status_code != 200):
-                print ("Failed to load '" + startURL + "' -- response code : " + str(res.status_code))
+                print ("Failed to load '" + 'http://github.com/'+str(git_username) + "' -- response code : " + str(res.status_code))
                 if(res.status_code == 429):
                     print("Sleeping --", end='')
                     time.sleep(5)
                     print("Reattempting connection!")
-                    return self.validateUser(startURL)
+                    return self.validateUser(git_username)
                 return -1
             print(".", end='')
             return 1
         except requests.exceptions.ConnectionError:
             print("Connection Exception caught")
-            self.counter += 1
-            if(self.counter > 16):
-                self.getProxies()
-                print("Reestablishing proxies")
-                self.counter = 0
-
-            return self.validateUser(startURL)
+            return self.validateUser(git_username)
 
 
 if __name__ == '__main__':
     filename = "ScrapedUsers/GithubUsernames.txt"
     startKey = ''
-    inst = ReqInstance()
+    inst = Requester_Instance()
     if(os.stat(filename).st_size != 0):
         with open(filename, 'r') as f:
             line = f.readlines()[-1]
