@@ -14,7 +14,7 @@ import traceback
 from lxml.html import fromstring
 import sys, getopt
 from random import randrange
-filename = "D:\\Projects\\gitscraper\\ScrapedRepos\\GithubRepositories5.txt"
+filename = "D:\\Projects\\gitscraper\\ScrapedRepos\\GithubRepositories_Running.txt"
 f = open(filename, "a", encoding='utf-8')
 
 
@@ -29,7 +29,6 @@ def parseContent(htmlData):
         lang = eachRepo.span
         if(lang != None):
             repos[lang.text.split()[0]] =  href
-            print("Writing")
             f.write('\"'+lang.text.split()[0]+'\":\"' + href+'\"\n')
     allForks = domStruct.select('li.col-12.d-flex.width-full.py-4.border-bottom.color-border-secondary.public.fork .f6.text-gray.mt-2')
     for eachFork in allForks:
@@ -39,7 +38,6 @@ def parseContent(htmlData):
         lang = eachFork.span
         if(lang != None):
             repos[lang.text.split()[0]] =  href
-            print("Writing")
             f.write('\"'+lang.text.split()[0]+'\":\"' + href+'\"\n')
 
     buttons = domStruct.select('#user-repositories-list > div > div')

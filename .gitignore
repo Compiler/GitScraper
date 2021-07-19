@@ -11,3 +11,4 @@ resources/outputCode
 resources/outputCode/*
 resources/outputCode
 htbb3.py
+__pycache__
