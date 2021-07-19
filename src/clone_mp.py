@@ -28,24 +28,17 @@ def download(language):
             print(path)
             os.system(path)
 
-if __name__=='__main__':
-    cloneName = ''
-    languages = ['JavaScript', 'Python', 'Java', 'Ruby', 'HTML', 'C++', 'C', 'PHP', 'Go', 'Shell', 'C#', 'CSS', 'TypeScript', 'Jupyter', 'Objective-C', 'MIT', 'Swift', 'Rust', 'Perl', 'Vim', 'R', 'Scala', 'Vue', 'Haskell', 'Clojure', 'GNU', 'Kotlin', 'Lua', 'TeX', 'CoffeeScript', 'Emacs', 'Dockerfile', 'Apache', 'Makefile', 'Dart', 'Elixir', 'PowerShell', 'Erlang', 'MATLAB', 'Creative', 'Groovy', 'OCaml', 'Julia', 'Assembly', 'Arduino', 'Common', 'HCL', 'Puppet', 'Batchfile', 'CMake', 'ActionScript', 'Template', 'Visual', 'F#', 'Scheme', 'SCSS', 'Processing', 'Pascal', 'Smarty', 'Nix', 'BSD', 'Elm', 'D', 'Verilog', 'XSLT', 'Fortran', 'Crystal', 'Racket', 'TSQL', 'ASP', 'Nim', 'VHDL', 'QML', 'Roff', 'PLpgSQL', 'OpenSCAD', 'Haxe', 'Eagle', 'AutoHotkey', 'Prolog', 'Cuda', 'Tcl', 'ApacheConf', 'Objective-C++', 'GDScript', 'Mathematica', 'PureScript', 'GLSL', 'SaltStack', 'Smalltalk', 'Mozilla', 'Nginx', 'SourcePawn', 'Rich', 'ShaderLab', 'Vala', 'PLSQL', 'PostScript', 'Standard', 'Logos']
-    #print([x[0] for x in os.walk(root + "\\resources\\outputCode\\")])
-    languages = glob(root + "\\resources\\outputCode\\*")
-    exceptions = ["Java", "Python"]
-    count = 0;
+
+def run_driver(root_filename, exceptions):
+    languages = glob(root_filename + "\\*")
     for exception in exceptions:
         languages.remove("D:\\Projects\\gitscraper\\resources\\outputCode\\" + exception)
-
-
-
-    test_lang = languages[0][len("D:\\Projects\\gitscraper\\resources\\outputCode\\"):]
-    print(test_lang)
-
     cpu_count = mp.cpu_count()
     pool = mp.Pool(cpu_count)
     result = pool.map(download, languages)
+if __name__=='__main__':
+    run_driver(root + "\\resources\\outputCode", ["Java", "Python"])
+    
     
 
     
