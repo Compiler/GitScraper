@@ -18,3 +18,7 @@ def add_newline_if_missing(filename):
         if(input_file.read()[-1] != '\n'):
             input_file.write("\n")
             input_file.close()
+
+def get_last_line(filename):
+    with open(filename, 'r') as f:
+        return f.readlines()[-1]
