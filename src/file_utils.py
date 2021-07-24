@@ -19,6 +19,25 @@ def add_newline_if_missing(filename):
             input_file.write("\n")
             input_file.close()
 
+def add_newline_if_missing_big(filename):
+    with open(filename, 'r+', encoding='utf-8') as input_file:
+        last_line = ""
+        count = 0
+        for line in input_file:
+            count = count + 1
+            last_line = line
+        print(count)
+    
+    with open(filename, 'r+', encoding='utf-8') as new_input_file:
+        new_count = 0
+        for line in new_input_file:
+            new_count = new_count + 1
+            if(line == last_line):
+                if(line[-1] != '\n' and new_count == count):
+                    new_input_file.write("\n")
+                    new_input_file.close()
+        print(new_count)
+
 def get_last_line(filename):
     with open(filename, 'r') as f:
         return f.readlines()[-1]

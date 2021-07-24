@@ -18,7 +18,7 @@ if __name__=='__main__':
         languages.remove("D:\\Projects\\gitscraper\\resources\\outputCode\\" + exception)
 
     languages = ["D:\\Projects\\gitscraper\\resources\\outputCode\\Python"]
-    last_line = '"Python":"https://github.com/K8H/dopavision"'
+    last_line = '"Python":"https://github.com/mih/stabilitycalc/stargazers"'
     resume = False
     for line in repos:
         if(not resume):
