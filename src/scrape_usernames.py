@@ -54,7 +54,7 @@ class Requester_Instance:
         try:
             res = requests.get('http://github.com/'+str(git_username), headers= {'User-Agent' : "Mozilla/5.0"})
             if(res.status_code != 200):
-                print ("Failed to load '" + 'http://github.com/'+str(git_username) + "' -- response code : " + str(res.status_code))
+                #print ("Failed to load '" + 'http://github.com/'+str(git_username) + "' -- response code : " + str(res.status_code))
                 if(res.status_code == 429):
                     print("Sleeping --", end='')
                     time.sleep(5)
