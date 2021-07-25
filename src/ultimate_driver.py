@@ -19,7 +19,7 @@ if __name__=='__main__':
 
 
 
-    last_line = "bentAamir99"
+    last_line = "Aamirgraphic"
     resume = False
     for line in username_file:
         if(not resume):
@@ -29,7 +29,7 @@ if __name__=='__main__':
         line = line[:-1]
         if(request_instance.validateUser(line) == 1):
             logging.critical("\"%s\": Validated!", line)
-            valid_users.write(line)
+            valid_users.write(line+"\n")
             parse_repos.scrapeRepos(line)
         else:
             pass#logging.critical("\"%s\": Invalidated!", line)
