@@ -13,9 +13,9 @@ from itertools import cycle
 import traceback
 from lxml.html import fromstring
 import sys, getopt
-from random import randrange
-filename = "D:\\Projects\\gitscraper\\ScrapedRepos\\GithubRepositories_Running.txt"
-f = open(filename, "a", encoding='utf-8')
+
+filename = "ScrapedRepos/GithubRepositories_Running.txt"
+out_file = open(filename, "a", encoding='utf-8')
 
 
 repos = dict()
@@ -29,16 +29,14 @@ def parseContent(htmlData):
         lang = eachRepo.span
         if(lang != None):
             repos[lang.text.split()[0]] =  href
-            f.write('\"'+lang.text.split()[0]+'\":\"' + href+'\"\n')
+            out_file.write('\"'+lang.text.split()[0]+'\":\"' + href+'\"\n')
     allForks = domStruct.select('li.col-12.d-flex.width-full.py-4.border-bottom.color-border-secondary.public.fork .f6.text-gray.mt-2')
     for eachFork in allForks:
-        if(eachFork.a == None):
-            continue
         href = 'https://github.com' + eachFork.a.attrs["href"]
         lang = eachFork.span
         if(lang != None):
             repos[lang.text.split()[0]] =  href
-            f.write('\"'+lang.text.split()[0]+'\":\"' + href+'\"\n')
+            out_file.write('\"'+lang.text.split()[0]+'\":\"' + href+'\"\n')
 
     buttons = domStruct.select('#user-repositories-list > div > div')
     buttonSel = domStruct.select('.paginate-container')
@@ -72,14 +70,11 @@ def scrapeRepos(startURL):
             print ("Failed to load '" + startURL + "' -- response code : " + str(res.status_code))
             if(res.status_code == 429):
                 print("Sleeping --", end='')
-                rand = randrange(5)
-                print(rand)
-                time.sleep(rand)
+                time.sleep(5)
                 
                 print("Reattempting connection!")
                 return scrapeRepos(startURL)
             return -1
-        print("\t\tParsing Content")
         code = parseContent(res.content)
         while(code[0] == 1):
             print('Next\tNew url:',code[1])
@@ -115,25 +110,15 @@ def driver():
                 continue
             scrapeRepos(username)
     print("Closing")
-    f.close()
+    out_file.close()
 
 
 def test_driver():
     scrapeRepos('b')
     
-def file_driver():
-    userfileName = 'ScrapedUsers/CombinedUsers.txt'
-    files = ['D:\\Projects\\gitscraper\\ScrapedUsers\\GithubUsernames5.txt', 'D:\\Projects\\gitscraper\\ScrapedUsers\\GithubUsernames5_5.txt']
-    for file in files:
-        with open(file, 'r') as theFile:
-            lines = theFile.readlines()
-        for name in lines:
-            print(name.split('/')[-1])
-            scrapeRepos(name.split('/')[1])
 
 if __name__ == '__main__':
     #test_driver();
-    #driver();
-    file_driver()
+    driver();
 
     

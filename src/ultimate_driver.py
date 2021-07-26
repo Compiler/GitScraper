@@ -8,9 +8,9 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%
 
 
 if __name__=='__main__':
-    username_filename = "D:\\Projects\\gitscraper\\ScrapedUsers\\name_combinations.txt"
+    username_filename = "D:\\Projects\\gitscraper\\ScrapedUsers\\updated_name_combinations.txt"
     valid_user_output = "D:\\Projects\\gitscraper\\ScrapedUsers\\valid_name_combinations.txt"
-    valid_users = open(valid_user_output, "w", encoding="utf-8")
+    valid_users = open(valid_user_output, "a", encoding="utf-8")
     username_file = open(username_filename, "r", encoding="utf-8")
 
     #file_utils.add_newline_if_missing_big(username_filename)
@@ -20,7 +20,7 @@ if __name__=='__main__':
 
 
     last_line = "Aamirgraphic"
-    resume = False
+    resume = True #set to False to resume from last line
     for line in username_file:
         if(not resume):
             if(line != last_line+"\n"): logging.critical("Skipped: '%s'", line); continue;
